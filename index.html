@@ -231,7 +231,7 @@
 
     .modal-backdrop {
       position: absolute;
-      z-index: 50;
+      z-index: 999999;
       inset: 0;
       background: rgba(2, 6, 23, .72);
       display: flex;
@@ -536,7 +536,7 @@
       return null;
     }
 
-    function SceneView({ scene, onHotspotAction, autoRotate, gyroEnabled }) {
+    function SceneView({ scene, onHotspotAction, autoRotate, gyroEnabled, overlayOpen }) {
       const imageUrl = BG_BASE_URL + scene.image;
       return (
         React.createElement(Canvas, {
@@ -546,10 +546,10 @@
         },
           React.createElement(Suspense, { fallback: null },
             React.createElement(Panorama, { imageUrl }),
-            (scene.imagePlanes || []).map((item) =>
+            !overlayOpen && (scene.imagePlanes || []).map((item) =>
               React.createElement(ImagePlane, { key: item.id || item.file, item, onAction: onHotspotAction })
             ),
-            (scene.hotspots || []).map((hotspot) =>
+            !overlayOpen && (scene.hotspots || []).map((hotspot) =>
               React.createElement(Hotspot, { key: hotspot.id, hotspot, onAction: onHotspotAction })
             )
           ),
@@ -731,7 +731,8 @@
                 scene: currentScene,
                 onHotspotAction,
                 autoRotate,
-                gyroEnabled
+                gyroEnabled,
+                overlayOpen: Boolean(selectedInfo || youtubeUrl)
               })
             )
           ),
