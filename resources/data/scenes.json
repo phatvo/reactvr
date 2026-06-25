@@ -8,366 +8,426 @@
       "hotspots": [
       ],
       "imagePlanes": [
-        {
-          "id": "imgplane-1",
-          "type": "imagePlane",
-          "exhibitId": "1",
-          "yaw": -72,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-2",
-          "type": "imagePlane",
-          "exhibitId": "2",
-          "yaw": -56,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-3",
-          "type": "imagePlane",
-          "exhibitId": "3",
-          "yaw": -40,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-4",
-          "type": "imagePlane",
-          "exhibitId": "4",
-          "yaw": -24,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-5",
-          "type": "imagePlane",
-          "exhibitId": "5",
-          "yaw": -8,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-6",
-          "type": "imagePlane",
-          "exhibitId": "6",
-          "yaw": 8,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-7",
-          "type": "imagePlane",
-          "exhibitId": "7",
-          "yaw": 24,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-8",
-          "type": "imagePlane",
-          "exhibitId": "8",
-          "yaw": 40,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-9",
-          "type": "imagePlane",
-          "exhibitId": "9",
-          "yaw": 56,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-10",
-          "type": "imagePlane",
-          "exhibitId": "10",
-          "yaw": 72,
-          "pitch": 18,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-11",
-          "type": "imagePlane",
-          "exhibitId": "11",
-          "yaw": -72,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-12",
-          "type": "imagePlane",
-          "exhibitId": "12",
-          "yaw": -56,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-13",
-          "type": "imagePlane",
-          "exhibitId": "13",
-          "yaw": -40,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-14",
-          "type": "imagePlane",
-          "exhibitId": "14",
-          "yaw": -24,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-15",
-          "type": "imagePlane",
-          "exhibitId": "15",
-          "yaw": -8,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-16",
-          "type": "imagePlane",
-          "exhibitId": "16",
-          "yaw": 8,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-17",
-          "type": "imagePlane",
-          "exhibitId": "17",
-          "yaw": 24,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-18",
-          "type": "imagePlane",
-          "exhibitId": "18",
-          "yaw": 40,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-19",
-          "type": "imagePlane",
-          "exhibitId": "19",
-          "yaw": 56,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-20",
-          "type": "imagePlane",
-          "exhibitId": "20",
-          "yaw": 72,
-          "pitch": 7,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-21",
-          "type": "imagePlane",
-          "exhibitId": "21",
-          "yaw": -72,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-22",
-          "type": "imagePlane",
-          "exhibitId": "22",
-          "yaw": -56,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-23",
-          "type": "imagePlane",
-          "exhibitId": "23",
-          "yaw": -40,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-24",
-          "type": "imagePlane",
-          "exhibitId": "24",
-          "yaw": -24,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-25",
-          "type": "imagePlane",
-          "exhibitId": "25",
-          "yaw": -8,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-26",
-          "type": "imagePlane",
-          "exhibitId": "26",
-          "yaw": 8,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-27",
-          "type": "imagePlane",
-          "exhibitId": "27",
-          "yaw": 24,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-28",
-          "type": "imagePlane",
-          "exhibitId": "28",
-          "yaw": 40,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-29",
-          "type": "imagePlane",
-          "exhibitId": "29",
-          "yaw": 56,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        },
-        {
-          "id": "imgplane-30",
-          "type": "imagePlane",
-          "exhibitId": "30",
-          "yaw": 72,
-          "pitch": -4,
-          "distance": 7.5,
-          "size": [
-            1.55,
-            0.87
-          ]
-        }
+       {
+		"id": "imgplane-1",
+		"type": "imagePlane",
+		"exhibitId": "1",
+		"yaw": -165,
+		"pitch": 17,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 1
+	  },
+	  {
+		"id": "imgplane-2",
+		"type": "imagePlane",
+		"exhibitId": "2",
+		"yaw": -145,
+		"pitch": 17,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 2
+	  },
+	  {
+		"id": "imgplane-3",
+		"type": "imagePlane",
+		"exhibitId": "3",
+		"yaw": -125,
+		"pitch": 17,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 3
+	  },
+	  {
+		"id": "imgplane-4",
+		"type": "imagePlane",
+		"exhibitId": "4",
+		"yaw": -35,
+		"pitch": 17,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 4
+	  },
+	  {
+		"id": "imgplane-5",
+		"type": "imagePlane",
+		"exhibitId": "5",
+		"yaw": -15,
+		"pitch": 17,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 5
+	  },
+	  {
+		"id": "imgplane-6",
+		"type": "imagePlane",
+		"exhibitId": "6",
+		"yaw": 5,
+		"pitch": 17,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 6
+	  },
+	  {
+		"id": "imgplane-7",
+		"type": "imagePlane",
+		"exhibitId": "7",
+		"yaw": 25,
+		"pitch": 17,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 7
+	  },
+	  {
+		"id": "imgplane-8",
+		"type": "imagePlane",
+		"exhibitId": "8",
+		"yaw": 70,
+		"pitch": 17,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 8
+	  },
+	  {
+		"id": "imgplane-9",
+		"type": "imagePlane",
+		"exhibitId": "9",
+		"yaw": 95,
+		"pitch": 17,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 9
+	  },
+	  {
+		"id": "imgplane-10",
+		"type": "imagePlane",
+		"exhibitId": "10",
+		"yaw": 120,
+		"pitch": 17,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 1,
+		"col": 10
+	  },
+	  {
+		"id": "imgplane-11",
+		"type": "imagePlane",
+		"exhibitId": "11",
+		"yaw": -165,
+		"pitch": 8,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 1
+	  },
+	  {
+		"id": "imgplane-12",
+		"type": "imagePlane",
+		"exhibitId": "12",
+		"yaw": -145,
+		"pitch": 8,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 2
+	  },
+	  {
+		"id": "imgplane-13",
+		"type": "imagePlane",
+		"exhibitId": "13",
+		"yaw": -125,
+		"pitch": 8,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 3
+	  },
+	  {
+		"id": "imgplane-14",
+		"type": "imagePlane",
+		"exhibitId": "14",
+		"yaw": -35,
+		"pitch": 8,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 4
+	  },
+	  {
+		"id": "imgplane-15",
+		"type": "imagePlane",
+		"exhibitId": "15",
+		"yaw": -15,
+		"pitch": 8,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 5
+	  },
+	  {
+		"id": "imgplane-16",
+		"type": "imagePlane",
+		"exhibitId": "16",
+		"yaw": 5,
+		"pitch": 8,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 6
+	  },
+	  {
+		"id": "imgplane-17",
+		"type": "imagePlane",
+		"exhibitId": "17",
+		"yaw": 25,
+		"pitch": 8,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 7
+	  },
+	  {
+		"id": "imgplane-18",
+		"type": "imagePlane",
+		"exhibitId": "18",
+		"yaw": 70,
+		"pitch": 8,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 8
+	  },
+	  {
+		"id": "imgplane-19",
+		"type": "imagePlane",
+		"exhibitId": "19",
+		"yaw": 95,
+		"pitch": 8,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 9
+	  },
+	  {
+		"id": "imgplane-20",
+		"type": "imagePlane",
+		"exhibitId": "20",
+		"yaw": 120,
+		"pitch": 8,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 2,
+		"col": 10
+	  },
+	  {
+		"id": "imgplane-21",
+		"type": "imagePlane",
+		"exhibitId": "21",
+		"yaw": -165,
+		"pitch": -1,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 1
+	  },
+	  {
+		"id": "imgplane-22",
+		"type": "imagePlane",
+		"exhibitId": "22",
+		"yaw": -145,
+		"pitch": -1,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 2
+	  },
+	  {
+		"id": "imgplane-23",
+		"type": "imagePlane",
+		"exhibitId": "23",
+		"yaw": -125,
+		"pitch": -1,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 3
+	  },
+	  {
+		"id": "imgplane-24",
+		"type": "imagePlane",
+		"exhibitId": "24",
+		"yaw": -35,
+		"pitch": -1,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 4
+	  },
+	  {
+		"id": "imgplane-25",
+		"type": "imagePlane",
+		"exhibitId": "25",
+		"yaw": -15,
+		"pitch": -1,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 5
+	  },
+	  {
+		"id": "imgplane-26",
+		"type": "imagePlane",
+		"exhibitId": "26",
+		"yaw": 5,
+		"pitch": -1,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 6
+	  },
+	  {
+		"id": "imgplane-27",
+		"type": "imagePlane",
+		"exhibitId": "27",
+		"yaw": 25,
+		"pitch": -1,
+		"distance": 6.8,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 7
+	  },
+	  {
+		"id": "imgplane-28",
+		"type": "imagePlane",
+		"exhibitId": "28",
+		"yaw": 70,
+		"pitch": -1,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 8
+	  },
+	  {
+		"id": "imgplane-29",
+		"type": "imagePlane",
+		"exhibitId": "29",
+		"yaw": 95,
+		"pitch": -1,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 9
+	  },
+	  {
+		"id": "imgplane-30",
+		"type": "imagePlane",
+		"exhibitId": "30",
+		"yaw": 120,
+		"pitch": -1,
+		"distance": 7.2,
+		"size": [
+		  1.05,
+		  0.7
+		],
+		"row": 3,
+		"col": 10
+	  }
       ]
     },
     {
