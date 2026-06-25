@@ -1,16 +1,9 @@
 [
   {
-    "id": "control-room",
-    "sceneId": "control-room",
-    "title": "Phòng điều khiển mẫu",
-    "description": "Ảnh 360 mẫu để kiểm tra giao diện.",
-    "file": "sample-control-room-360.jpg"
-  },
-  {
-    "id": "substation-yard",
-    "sceneId": "substation-yard",
-    "title": "Sân trạm mẫu",
-    "description": "Ảnh 360 mẫu thứ hai, dùng để thử chuyển cảnh.",
-    "file": "sample-substation-360.jpg"
+    "id": "phong-truyen-thong",
+    "sceneId": "phong-truyen-thong",
+    "title": "Phòng truyền thống",
+    "description": "Ảnh 360",
+    "file": "phong-truyen-thong.jpg"
   }
 ]
