@@ -16,6 +16,11 @@ r3f-github-pages-vr360/
    │  └─ sample-substation-360.jpg
    ├─ data/
    │  └─ scenes.json
+   ├─ exhibit/
+   │  ├─ exhibit.json
+   │  ├─ exhibit-scada-diagram.jpg
+   │  ├─ exhibit-operation-process.jpg
+   │  └─ exhibit-equipment-photo.jpg
    └─ video/
       └─ videos.json
 ```
@@ -169,24 +174,31 @@ Khi upload lên GitHub Pages thì không cần chạy server trên máy bạn.
 
 Project đã hỗ trợ `imagePlanes`: ảnh được render như một khung ảnh/biển trưng bày nổi trong không gian 360.
 
-Thư mục ảnh trưng bày:
+Dữ liệu ảnh trưng bày được tách riêng trong:
 
 ```text
-resources/exhibit/
-  exhibit-scada-diagram.jpg
-  exhibit-operation-process.jpg
-  exhibit-equipment-photo.jpg
+resources/exhibit/exhibit.json
 ```
 
-Khai báo trong `resources/data/scenes.json`:
+Ví dụ `resources/exhibit/exhibit.json`:
+
+```json
+{
+  "id": "scada-diagram",
+  "title": "Sơ đồ SCADA",
+  "description": "Ảnh trưng bày dạng khung 3D. Click vào khung để xem ảnh lớn trong popup.",
+  "file": "exhibit-scada-diagram.jpg",
+  "category": "Phòng điều khiển"
+}
+```
+
+Còn vị trí khung ảnh trong từng phòng/scene nằm trong `resources/data/scenes.json`:
 
 ```json
 {
   "id": "imgplane-scada-diagram",
   "type": "imagePlane",
-  "title": "Sơ đồ SCADA",
-  "description": "Click vào khung để xem ảnh lớn trong popup.",
-  "file": "exhibit-scada-diagram.jpg",
+  "exhibitId": "scada-diagram",
   "yaw": -55,
   "pitch": 8,
   "distance": 7.5,
@@ -196,16 +208,56 @@ Khai báo trong `resources/data/scenes.json`:
 
 Ý nghĩa cấu hình:
 
-- `file`: tên ảnh trong `resources/exhibit/`.
+- `exhibitId`: liên kết tới `id` trong `resources/exhibit/exhibit.json`.
+- `file`: tên ảnh trong `resources/exhibit/`, khai báo trong `exhibit.json`.
 - `yaw`: vị trí ngang quanh phòng, đơn vị độ.
 - `pitch`: vị trí cao/thấp, đơn vị độ.
 - `distance`: khoảng cách khung ảnh so với camera ở tâm.
 - `size`: kích thước khung ảnh trong không gian 3D, dạng `[rộng, cao]`.
 
-Cách thay ảnh thật:
+Cách thêm ảnh trưng bày mới:
 
 1. Chép ảnh vào `resources/exhibit/`, nên đặt tên không dấu và không khoảng trắng.
-2. Mở `resources/data/scenes.json`.
-3. Sửa trường `file` của `imagePlanes` thành tên ảnh mới.
-4. Điều chỉnh `yaw`, `pitch`, `distance`, `size` nếu cần.
-5. Commit và push lên GitHub.
+2. Mở `resources/exhibit/exhibit.json`, thêm một object mới gồm `id`, `title`, `description`, `file`.
+3. Mở `resources/data/scenes.json`, thêm một object trong `imagePlanes` của scene cần hiển thị.
+4. Gán `exhibitId` bằng đúng `id` đã khai báo trong `exhibit.json`.
+5. Điều chỉnh `yaw`, `pitch`, `distance`, `size` nếu cần.
+6. Commit và push lên GitHub.
+
+
+## Layout ảnh trưng bày 30 ảnh
+
+Thư mục `resources/exhibit/` đang được cấu hình cho 30 ảnh trưng bày:
+
+```text
+resources/exhibit/
+├─ exhibit.json
+├─ 1.jpg
+├─ 2.jpg
+├─ ...
+└─ 30.jpg
+```
+
+- `resources/exhibit/exhibit.json` quản lý `id`, `title`, `description`, `file`.
+- `resources/data/scenes.json` quản lý vị trí treo ảnh trong scene `control-room`.
+- 30 ảnh được layout thành 3 hàng x 10 cột bằng `imagePlanes`.
+- Bạn chỉ cần thay các file `1.jpg` đến `30.jpg` bằng ảnh thật của bạn, giữ nguyên tên file.
+
+Thông số vị trí trong `scenes.json`:
+
+```json
+{
+  "id": "imgplane-1",
+  "type": "imagePlane",
+  "exhibitId": "1",
+  "yaw": -72,
+  "pitch": 18,
+  "distance": 7.5,
+  "size": [1.55, 0.87]
+}
+```
+
+- `yaw`: vị trí trái/phải.
+- `pitch`: vị trí cao/thấp.
+- `distance`: khoảng cách từ người xem đến khung ảnh.
+- `size`: kích thước khung ảnh `[rộng, cao]`.

@@ -360,6 +360,7 @@
     const BG_BASE_URL = './resources/bg/';
     const EXHIBIT_BASE_URL = './resources/exhibit/';
     const DATA_SCENES_URL = './resources/data/scenes.json';
+    const DATA_EXHIBITS_URL = './resources/exhibit/exhibit.json';
     const DATA_VIDEOS_URL = './resources/video/videos.json';
     const DATA_GALLERY_URL = './resources/bg/gallery.json';
 
@@ -574,6 +575,7 @@
       const [loadError, setLoadError] = useState('');
       const [gallery, setGallery] = useState([]);
       const [videos, setVideos] = useState([]);
+      const [exhibits, setExhibits] = useState([]);
       const [sceneData, setSceneData] = useState({ initialSceneId: '', scenes: [] });
       const [currentSceneId, setCurrentSceneId] = useState('');
       const [selectedInfo, setSelectedInfo] = useState(null);
@@ -586,10 +588,11 @@
       useEffect(() => {
         let cancelled = false;
         async function loadData() {
-          const [loadedScenes, loadedGallery, loadedVideos] = await Promise.all([
+          const [loadedScenes, loadedGallery, loadedVideos, loadedExhibits] = await Promise.all([
             readJson(DATA_SCENES_URL, null),
             readJson(DATA_GALLERY_URL, []),
-            readJson(DATA_VIDEOS_URL, [])
+            readJson(DATA_VIDEOS_URL, []),
+            readJson(DATA_EXHIBITS_URL, [])
           ]);
 
           if (cancelled) return;
@@ -602,6 +605,7 @@
           setSceneData(loadedScenes);
           setGallery(Array.isArray(loadedGallery) ? loadedGallery : []);
           setVideos(Array.isArray(loadedVideos) ? loadedVideos : []);
+          setExhibits(Array.isArray(loadedExhibits) ? loadedExhibits : []);
           setCurrentSceneId(loadedScenes.initialSceneId || loadedScenes.scenes[0].id);
           setLoaded(true);
         }
@@ -615,7 +619,29 @@
         return map;
       }, [sceneData]);
 
-      const currentScene = scenesById.get(currentSceneId) || sceneData.scenes?.[0];
+      const exhibitsById = useMemo(() => {
+        const map = new Map();
+        exhibits.forEach(item => map.set(item.id, item));
+        return map;
+      }, [exhibits]);
+
+      const currentSceneRaw = scenesById.get(currentSceneId) || sceneData.scenes?.[0];
+      const currentScene = useMemo(() => {
+        if (!currentSceneRaw) return currentSceneRaw;
+        const imagePlanes = (currentSceneRaw.imagePlanes || []).map((plane) => {
+          const exhibit = plane.exhibitId ? exhibitsById.get(plane.exhibitId) : null;
+          return {
+            ...(exhibit || {}),
+            ...plane,
+            type: plane.type || 'imagePlane',
+            title: plane.title || exhibit?.title,
+            description: plane.description || exhibit?.description,
+            details: plane.details || exhibit?.details,
+            file: plane.file || exhibit?.file
+          };
+        });
+        return { ...currentSceneRaw, imagePlanes };
+      }, [currentSceneRaw, exhibitsById]);
 
       const openYoutube = useCallback((url) => {
         const videoId = getYoutubeId(url);
@@ -788,7 +814,7 @@
                   React.createElement('div', null, 'PC: kéo chuột để xoay, cuộn để zoom, click hotspot để tương tác.'),
                   React.createElement('div', { style: { marginTop: 6 } }, 'Mobile: vuốt để xoay, bấm Cảm biến để thử xoay điện thoại.'),
                   React.createElement('div', { style: { marginTop: 6 } }, 'Thêm ảnh/video bằng cách sửa các file JSON trong thư mục resources.'),
-                  React.createElement('div', { style: { marginTop: 6 } }, 'Ảnh trưng bày kiểu 3D dùng scene.imagePlanes trong resources/data/scenes.json và file ảnh trong resources/exhibit/.')
+                  React.createElement('div', { style: { marginTop: 6 } }, 'Ảnh trưng bày kiểu 3D: resources/exhibit/exhibit.json quản lý file ảnh; resources/data/scenes.json quản lý vị trí khung ảnh qua exhibitId.')
                 )
               )
             )
