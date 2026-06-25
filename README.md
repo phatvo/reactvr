@@ -164,3 +164,48 @@ http://localhost:8080
 ```
 
 Khi upload lên GitHub Pages thì không cần chạy server trên máy bạn.
+
+## Ảnh trưng bày kiểu 3D trong phòng điều khiển
+
+Project đã hỗ trợ `imagePlanes`: ảnh được render như một khung ảnh/biển trưng bày nổi trong không gian 360.
+
+Thư mục ảnh trưng bày:
+
+```text
+resources/exhibit/
+  exhibit-scada-diagram.jpg
+  exhibit-operation-process.jpg
+  exhibit-equipment-photo.jpg
+```
+
+Khai báo trong `resources/data/scenes.json`:
+
+```json
+{
+  "id": "imgplane-scada-diagram",
+  "type": "imagePlane",
+  "title": "Sơ đồ SCADA",
+  "description": "Click vào khung để xem ảnh lớn trong popup.",
+  "file": "exhibit-scada-diagram.jpg",
+  "yaw": -55,
+  "pitch": 8,
+  "distance": 7.5,
+  "size": [2.8, 1.58]
+}
+```
+
+Ý nghĩa cấu hình:
+
+- `file`: tên ảnh trong `resources/exhibit/`.
+- `yaw`: vị trí ngang quanh phòng, đơn vị độ.
+- `pitch`: vị trí cao/thấp, đơn vị độ.
+- `distance`: khoảng cách khung ảnh so với camera ở tâm.
+- `size`: kích thước khung ảnh trong không gian 3D, dạng `[rộng, cao]`.
+
+Cách thay ảnh thật:
+
+1. Chép ảnh vào `resources/exhibit/`, nên đặt tên không dấu và không khoảng trắng.
+2. Mở `resources/data/scenes.json`.
+3. Sửa trường `file` của `imagePlanes` thành tên ảnh mới.
+4. Điều chỉnh `yaw`, `pitch`, `distance`, `size` nếu cần.
+5. Commit và push lên GitHub.

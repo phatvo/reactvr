@@ -33,6 +33,36 @@
           "yaw": 0,
           "pitch": -8
         }
+      ],
+      "imagePlanes": [
+        {
+          "id": "imgplane-scada-diagram",
+          "type": "imagePlane",
+          "title": "Sơ đồ SCADA",
+          "description": "Ảnh trưng bày dạng khung 3D. Click vào khung để xem ảnh lớn trong popup.",
+          "file": "exhibit-scada-diagram.jpg",
+          "yaw": -55,
+          "pitch": 8,
+          "distance": 7.5,
+          "size": [
+            2.8,
+            1.58
+          ]
+        },
+        {
+          "id": "imgplane-operation-process",
+          "type": "imagePlane",
+          "title": "Quy trình thao tác",
+          "description": "Có thể thay ảnh này bằng sơ đồ/quy trình thực tế của phòng điều khiển.",
+          "file": "exhibit-operation-process.jpg",
+          "yaw": 52,
+          "pitch": 6,
+          "distance": 7.5,
+          "size": [
+            2.8,
+            1.58
+          ]
+        }
       ]
     },
     {
@@ -63,6 +93,22 @@
           "targetSceneId": "control-room",
           "yaw": 180,
           "pitch": -6
+        }
+      ],
+      "imagePlanes": [
+        {
+          "id": "imgplane-equipment-photo",
+          "type": "imagePlane",
+          "title": "Ảnh thiết bị",
+          "description": "Ảnh trưng bày mẫu cho thiết bị. Bạn có thể đổi file trong resources/exhibit/ và cập nhật scenes.json.",
+          "file": "exhibit-equipment-photo.jpg",
+          "yaw": 25,
+          "pitch": 7,
+          "distance": 7.5,
+          "size": [
+            2.8,
+            1.58
+          ]
         }
       ]
     }

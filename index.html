@@ -358,6 +358,7 @@
     import { Html, OrbitControls } from 'https://esm.sh/@react-three/drei@9.99.0?deps=react@18.2.0,react-dom@18.2.0,three@0.160.0,@react-three/fiber@8.15.19';
 
     const BG_BASE_URL = './resources/bg/';
+    const EXHIBIT_BASE_URL = './resources/exhibit/';
     const DATA_SCENES_URL = './resources/data/scenes.json';
     const DATA_VIDEOS_URL = './resources/video/videos.json';
     const DATA_GALLERY_URL = './resources/bg/gallery.json';
@@ -416,10 +417,17 @@
       );
     }
 
+    function getResourceUrl(item) {
+      if (!item) return '';
+      if (item.imageUrl) return item.imageUrl;
+      if (item.file) return EXHIBIT_BASE_URL + item.file;
+      return '';
+    }
+
     function Hotspot({ hotspot, onAction }) {
       const position = useMemo(() => yawPitchToPosition(hotspot.yaw || 0, hotspot.pitch || 0), [hotspot.yaw, hotspot.pitch]);
-      const kindIcon = hotspot.type === 'video' ? '▶' : hotspot.type === 'navigate' ? '➜' : hotspot.type === 'link' ? '↗' : 'i';
-      const color = hotspot.type === 'video' ? '#fb7185' : hotspot.type === 'navigate' ? '#34d399' : '#38bdf8';
+      const kindIcon = hotspot.type === 'video' ? '▶' : hotspot.type === 'navigate' ? '➜' : hotspot.type === 'link' ? '↗' : hotspot.type === 'image' ? '▣' : 'i';
+      const color = hotspot.type === 'video' ? '#fb7185' : hotspot.type === 'navigate' ? '#34d399' : hotspot.type === 'image' ? '#fbbf24' : '#38bdf8';
 
       return (
         React.createElement('group', { position },
@@ -440,6 +448,53 @@
               React.createElement('span', { className: 'hotspot-kind' }, kindIcon),
               hotspot.title || 'Hotspot'
             )
+          )
+        )
+      );
+    }
+
+    function ImagePlane({ item, onAction }) {
+      const textureUrl = getResourceUrl(item);
+      const texture = useLoader(THREE.TextureLoader, textureUrl);
+      const groupRef = useRef(null);
+      const size = item.size || [2.6, 1.45];
+      const position = item.position || yawPitchToPosition(item.yaw || 0, item.pitch || 0, item.distance || 8);
+
+      useEffect(() => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.needsUpdate = true;
+      }, [texture]);
+
+      useEffect(() => {
+        if (!groupRef.current || item.rotation) return;
+        groupRef.current.lookAt(0, 0, 0);
+      }, [position, item.rotation]);
+
+      const rotation = item.rotation || undefined;
+
+      return React.createElement('group', { ref: groupRef, position, rotation },
+        React.createElement('mesh', { position: [0, 0, -0.035] },
+          React.createElement('planeGeometry', { args: [size[0] + 0.18, size[1] + 0.18] }),
+          React.createElement('meshBasicMaterial', { color: '#0f172a', side: THREE.DoubleSide })
+        ),
+        React.createElement('mesh', {
+          onClick: (event) => { event.stopPropagation(); onAction({ ...item, type: item.type || 'imagePlane', imageUrl: textureUrl }); },
+          onPointerOver: () => { document.body.style.cursor = 'pointer'; },
+          onPointerOut: () => { document.body.style.cursor = 'default'; }
+        },
+          React.createElement('planeGeometry', { args: size }),
+          React.createElement('meshBasicMaterial', { map: texture, side: THREE.DoubleSide })
+        ),
+        item.title && React.createElement(Html, { position: [0, -size[1] / 2 - 0.22, 0], center: true, distanceFactor: 8 },
+          React.createElement('div', {
+            className: 'hotspot-label',
+            onClick: (event) => { event.stopPropagation(); onAction({ ...item, type: item.type || 'imagePlane', imageUrl: textureUrl }); },
+            title: item.title
+          },
+            React.createElement('span', { className: 'hotspot-kind' }, '▣'),
+            item.title
           )
         )
       );
@@ -490,6 +545,9 @@
         },
           React.createElement(Suspense, { fallback: null },
             React.createElement(Panorama, { imageUrl }),
+            (scene.imagePlanes || []).map((item) =>
+              React.createElement(ImagePlane, { key: item.id || item.file, item, onAction: onHotspotAction })
+            ),
             (scene.hotspots || []).map((hotspot) =>
               React.createElement(Hotspot, { key: hotspot.id, hotspot, onAction: onHotspotAction })
             )
@@ -584,6 +642,14 @@
         }
         if (hotspot.type === 'link') {
           window.open(hotspot.url, '_blank', 'noopener,noreferrer');
+          return;
+        }
+        if (hotspot.type === 'image') {
+          setSelectedInfo({ ...hotspot, imageUrl: getResourceUrl(hotspot) });
+          return;
+        }
+        if (hotspot.type === 'imagePlane') {
+          setSelectedInfo({ ...hotspot, imageUrl: getResourceUrl(hotspot) });
           return;
         }
         setSelectedInfo(hotspot);
@@ -721,7 +787,8 @@
                 React.createElement('div', { className: 'panel-body hint' },
                   React.createElement('div', null, 'PC: kéo chuột để xoay, cuộn để zoom, click hotspot để tương tác.'),
                   React.createElement('div', { style: { marginTop: 6 } }, 'Mobile: vuốt để xoay, bấm Cảm biến để thử xoay điện thoại.'),
-                  React.createElement('div', { style: { marginTop: 6 } }, 'Thêm ảnh/video bằng cách sửa các file JSON trong thư mục resources.')
+                  React.createElement('div', { style: { marginTop: 6 } }, 'Thêm ảnh/video bằng cách sửa các file JSON trong thư mục resources.'),
+                  React.createElement('div', { style: { marginTop: 6 } }, 'Ảnh trưng bày kiểu 3D dùng scene.imagePlanes trong resources/data/scenes.json và file ảnh trong resources/exhibit/.')
                 )
               )
             )
@@ -734,6 +801,11 @@
                 React.createElement('button', { className: 'btn danger', onClick: () => setSelectedInfo(null) }, 'Đóng')
               ),
               React.createElement('div', { className: 'modal-body' },
+                selectedInfo.imageUrl && React.createElement('img', {
+                  src: selectedInfo.imageUrl,
+                  alt: selectedInfo.title || 'Ảnh trưng bày',
+                  style: { width: '100%', maxHeight: '62vh', objectFit: 'contain', borderRadius: 14, background: '#020617', marginBottom: 12 }
+                }),
                 React.createElement('p', null, selectedInfo.description || 'Chưa có mô tả.'),
                 selectedInfo.details && React.createElement('pre', { style: { whiteSpace: 'pre-wrap', color: '#cbd5e1' } }, selectedInfo.details)
               )
