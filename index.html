@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>R3F 360 VR Tour - GitHub Pages</title>
+  <style>
+    :root {
+      --panel-bg: rgba(9, 15, 27, 0.82);
+      --panel-border: rgba(255, 255, 255, 0.14);
+      --text: #f7fafc;
+      --muted: #cbd5e1;
+      --accent: #38bdf8;
+      --danger: #fb7185;
+      --ok: #34d399;
+    }
+
+    * { box-sizing: border-box; }
+    html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: #020617;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    .app-shell {
+      position: fixed;
+      inset: 0;
+      background: #020617;
+    }
+
+    .canvas-wrap {
+      position: absolute;
+      inset: 0;
+    }
+
+    .topbar {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .brand {
+      pointer-events: auto;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 15px;
+      line-height: 1.25;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+      max-width: 60vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .top-actions {
+      pointer-events: auto;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 1px solid var(--panel-border);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      padding: 9px 12px;
+      cursor: pointer;
+      transition: transform .12s ease, background .12s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover { transform: translateY(-1px); background: rgba(30, 41, 59, 0.96); }
+    .btn.active { border-color: rgba(56, 189, 248, 0.8); color: #e0f2fe; }
+    .btn.danger { border-color: rgba(251, 113, 133, 0.55); }
+
+    .side-panel {
+      position: absolute;
+      z-index: 18;
+      top: 88px;
+      left: 12px;
+      bottom: 12px;
+      width: 330px;
+      max-width: calc(100vw - 24px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .panel-card {
+      pointer-events: auto;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(12px);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 14px 40px rgba(0,0,0,.28);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .panel-body {
+      padding: 12px;
+      max-height: 46vh;
+      overflow: auto;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .gallery-item, .video-item {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(15, 23, 42, .55);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .gallery-item:hover, .video-item:hover {
+      background: rgba(30, 41, 59, .85);
+      border-color: rgba(56, 189, 248, .55);
+    }
+
+    .gallery-item.active {
+      border-color: rgba(52, 211, 153, .8);
+      background: rgba(6, 78, 59, .45);
+    }
+
+    .thumb {
+      width: 72px;
+      height: 42px;
+      border-radius: 9px;
+      object-fit: cover;
+      background: rgba(255,255,255,.08);
+    }
+
+    .item-title {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .item-desc {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .hotspot-label {
+      transform: translate(-50%, -50%);
+      min-width: 112px;
+      max-width: 170px;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.28);
+      background: rgba(2, 6, 23, .75);
+      backdrop-filter: blur(8px);
+      border-radius: 999px;
+      padding: 8px 10px;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 10px 24px rgba(0,0,0,.32);
+      user-select: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hotspot-label:hover {
+      border-color: rgba(56, 189, 248, .9);
+      background: rgba(14, 116, 144, .72);
+    }
+
+    .hotspot-kind {
+      display: inline-block;
+      font-size: 11px;
+      margin-right: 4px;
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      z-index: 50;
+      inset: 0;
+      background: rgba(2, 6, 23, .72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal {
+      width: min(760px, 100%);
+      max-height: min(82vh, 760px);
+      overflow: auto;
+      background: rgba(15, 23, 42, .96);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 20px;
+      box-shadow: 0 25px 80px rgba(0,0,0,.55);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .modal-title { font-size: 18px; font-weight: 800; }
+    .modal-body { padding: 16px; color: #e5e7eb; line-height: 1.55; }
+
+    .youtube-frame-wrap {
+      position: relative;
+      width: min(1100px, 100%);
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 25px 90px rgba(0,0,0,.65);
+    }
+
+    .youtube-frame-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .close-floating {
+      position: absolute;
+      z-index: 60;
+      top: 18px;
+      right: 18px;
+    }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at center, rgba(15,23,42,.72), rgba(2,6,23,.92));
+      color: var(--muted);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .error-box {
+      max-width: 700px;
+      background: rgba(127, 29, 29, .6);
+      border: 1px solid rgba(252, 165, 165, .35);
+      padding: 16px;
+      border-radius: 16px;
+      text-align: left;
+      line-height: 1.45;
+    }
+
+    .mobile-tabs {
+      display: none;
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        align-items: flex-start;
+      }
+      .brand { max-width: calc(100vw - 116px); }
+      .brand-title { font-size: 13px; }
+      .brand-subtitle { max-width: 100%; }
+      .top-actions { gap: 6px; }
+      .btn { padding: 8px 10px; font-size: 12px; }
+      .side-panel {
+        left: 8px;
+        right: 8px;
+        top: auto;
+        width: auto;
+        bottom: 8px;
+        max-height: 46vh;
+      }
+      .panel-card { border-radius: 16px; }
+      .panel-body { max-height: 28vh; }
+      .hotspot-label { min-width: 92px; max-width: 130px; font-size: 12px; padding: 7px 8px; }
+      .mobile-tabs {
+        display: flex;
+        gap: 6px;
+        padding: 8px;
+        border-bottom: 1px solid rgba(255,255,255,.1);
+      }
+      .desktop-only { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'https://esm.sh/react@18.2.0';
+    import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+    import * as THREE from 'https://esm.sh/three@0.160.0';
+    import { Canvas, useLoader, useThree } from 'https://esm.sh/@react-three/fiber@8.15.19?deps=react@18.2.0,react-dom@18.2.0,three@0.160.0';
+    import { Html, OrbitControls } from 'https://esm.sh/@react-three/drei@9.99.0?deps=react@18.2.0,react-dom@18.2.0,three@0.160.0,@react-three/fiber@8.15.19';
+
+    const BG_BASE_URL = './resources/bg/';
+    const DATA_SCENES_URL = './resources/data/scenes.json';
+    const DATA_VIDEOS_URL = './resources/video/videos.json';
+    const DATA_GALLERY_URL = './resources/bg/gallery.json';
+
+    function yawPitchToPosition(yawDeg, pitchDeg, radius = 24) {
+      const yaw = THREE.MathUtils.degToRad(yawDeg);
+      const pitch = THREE.MathUtils.degToRad(pitchDeg);
+      const x = radius * Math.sin(yaw) * Math.cos(pitch);
+      const y = radius * Math.sin(pitch);
+      const z = -radius * Math.cos(yaw) * Math.cos(pitch);
+      return [x, y, z];
+    }
+
+    function getYoutubeId(url) {
+      if (!url) return null;
+      const patterns = [
+        /youtube\.com\/watch\?v=([^&]+)/,
+        /youtu\.be\/([^?&]+)/,
+        /youtube\.com\/embed\/([^?&]+)/,
+        /youtube\.com\/shorts\/([^?&]+)/
+      ];
+      for (const pattern of patterns) {
+        const match = String(url).match(pattern);
+        if (match && match[1]) return match[1];
+      }
+      return null;
+    }
+
+    async function readJson(url, fallback) {
+      try {
+        const response = await fetch(url, { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        return await response.json();
+      } catch (error) {
+        console.error(`Không đọc được ${url}`, error);
+        return fallback;
+      }
+    }
+
+    function Panorama({ imageUrl }) {
+      const texture = useLoader(THREE.TextureLoader, imageUrl);
+
+      useEffect(() => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = false;
+        texture.needsUpdate = true;
+      }, [texture]);
+
+      return (
+        React.createElement('mesh', null,
+          React.createElement('sphereGeometry', { args: [50, 96, 48] }),
+          React.createElement('meshBasicMaterial', { map: texture, side: THREE.BackSide })
+        )
+      );
+    }
+
+    function Hotspot({ hotspot, onAction }) {
+      const position = useMemo(() => yawPitchToPosition(hotspot.yaw || 0, hotspot.pitch || 0), [hotspot.yaw, hotspot.pitch]);
+      const kindIcon = hotspot.type === 'video' ? '▶' : hotspot.type === 'navigate' ? '➜' : hotspot.type === 'link' ? '↗' : 'i';
+      const color = hotspot.type === 'video' ? '#fb7185' : hotspot.type === 'navigate' ? '#34d399' : '#38bdf8';
+
+      return (
+        React.createElement('group', { position },
+          React.createElement('mesh', {
+            onClick: (event) => { event.stopPropagation(); onAction(hotspot); },
+            onPointerOver: () => { document.body.style.cursor = 'pointer'; },
+            onPointerOut: () => { document.body.style.cursor = 'default'; }
+          },
+            React.createElement('sphereGeometry', { args: [0.28, 24, 24] }),
+            React.createElement('meshBasicMaterial', { color })
+          ),
+          React.createElement(Html, { center: true, distanceFactor: 10 },
+            React.createElement('div', {
+              className: 'hotspot-label',
+              onClick: (event) => { event.stopPropagation(); onAction(hotspot); },
+              title: hotspot.title
+            },
+              React.createElement('span', { className: 'hotspot-kind' }, kindIcon),
+              hotspot.title || 'Hotspot'
+            )
+          )
+        )
+      );
+    }
+
+    function GyroController({ enabled }) {
+      const { camera } = useThree();
+      const lastQuaternionRef = useRef(null);
+
+      useEffect(() => {
+        if (!enabled) return;
+
+        function handleOrientation(event) {
+          if (event.alpha == null || event.beta == null || event.gamma == null) return;
+          const alpha = THREE.MathUtils.degToRad(event.alpha || 0);
+          const beta = THREE.MathUtils.degToRad(event.beta || 0);
+          const gamma = THREE.MathUtils.degToRad(event.gamma || 0);
+          const orient = window.screen?.orientation?.angle ? THREE.MathUtils.degToRad(window.screen.orientation.angle) : 0;
+
+          const euler = new THREE.Euler(beta, alpha, -gamma, 'YXZ');
+          const quaternion = new THREE.Quaternion().setFromEuler(euler);
+          const q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+          const q0 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -orient);
+          quaternion.multiply(q1).multiply(q0);
+
+          if (lastQuaternionRef.current) {
+            camera.quaternion.slerpQuaternions(lastQuaternionRef.current, quaternion, 0.35);
+          } else {
+            camera.quaternion.copy(quaternion);
+          }
+          lastQuaternionRef.current = camera.quaternion.clone();
+        }
+
+        window.addEventListener('deviceorientation', handleOrientation, true);
+        return () => window.removeEventListener('deviceorientation', handleOrientation, true);
+      }, [enabled, camera]);
+
+      return null;
+    }
+
+    function SceneView({ scene, onHotspotAction, autoRotate, gyroEnabled }) {
+      const imageUrl = BG_BASE_URL + scene.image;
+      return (
+        React.createElement(Canvas, {
+          camera: { position: [0, 0, 0.1], fov: 75, near: 0.01, far: 1000 },
+          gl: { antialias: true, alpha: false },
+          dpr: [1, 1.75]
+        },
+          React.createElement(Suspense, { fallback: null },
+            React.createElement(Panorama, { imageUrl }),
+            (scene.hotspots || []).map((hotspot) =>
+              React.createElement(Hotspot, { key: hotspot.id, hotspot, onAction: onHotspotAction })
+            )
+          ),
+          React.createElement(GyroController, { enabled: gyroEnabled }),
+          !gyroEnabled && React.createElement(OrbitControls, {
+            enablePan: false,
+            enableZoom: true,
+            enableDamping: true,
+            dampingFactor: 0.08,
+            rotateSpeed: -0.35,
+            minDistance: 0.1,
+            maxDistance: 8,
+            target: [0, 0, 0],
+            autoRotate,
+            autoRotateSpeed: 0.55
+          })
+        )
+      );
+    }
+
+    function App() {
+      const [loaded, setLoaded] = useState(false);
+      const [loadError, setLoadError] = useState('');
+      const [gallery, setGallery] = useState([]);
+      const [videos, setVideos] = useState([]);
+      const [sceneData, setSceneData] = useState({ initialSceneId: '', scenes: [] });
+      const [currentSceneId, setCurrentSceneId] = useState('');
+      const [selectedInfo, setSelectedInfo] = useState(null);
+      const [youtubeUrl, setYoutubeUrl] = useState('');
+      const [showPanel, setShowPanel] = useState(true);
+      const [activeMobileTab, setActiveMobileTab] = useState('gallery');
+      const [autoRotate, setAutoRotate] = useState(false);
+      const [gyroEnabled, setGyroEnabled] = useState(false);
+
+      useEffect(() => {
+        let cancelled = false;
+        async function loadData() {
+          const [loadedScenes, loadedGallery, loadedVideos] = await Promise.all([
+            readJson(DATA_SCENES_URL, null),
+            readJson(DATA_GALLERY_URL, []),
+            readJson(DATA_VIDEOS_URL, [])
+          ]);
+
+          if (cancelled) return;
+          if (!loadedScenes || !Array.isArray(loadedScenes.scenes) || loadedScenes.scenes.length === 0) {
+            setLoadError('Không đọc được resources/data/scenes.json hoặc file không có scenes. Kiểm tra lại cấu trúc dữ liệu.');
+            setLoaded(true);
+            return;
+          }
+
+          setSceneData(loadedScenes);
+          setGallery(Array.isArray(loadedGallery) ? loadedGallery : []);
+          setVideos(Array.isArray(loadedVideos) ? loadedVideos : []);
+          setCurrentSceneId(loadedScenes.initialSceneId || loadedScenes.scenes[0].id);
+          setLoaded(true);
+        }
+        loadData();
+        return () => { cancelled = true; };
+      }, []);
+
+      const scenesById = useMemo(() => {
+        const map = new Map();
+        (sceneData.scenes || []).forEach(scene => map.set(scene.id, scene));
+        return map;
+      }, [sceneData]);
+
+      const currentScene = scenesById.get(currentSceneId) || sceneData.scenes?.[0];
+
+      const openYoutube = useCallback((url) => {
+        const videoId = getYoutubeId(url);
+        if (!videoId) {
+          alert('Link YouTube không hợp lệ. Hãy dùng dạng https://www.youtube.com/watch?v=... hoặc https://youtu.be/...');
+          return;
+        }
+        setYoutubeUrl(`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1`);
+      }, []);
+
+      const onHotspotAction = useCallback((hotspot) => {
+        if (hotspot.type === 'navigate') {
+          if (hotspot.targetSceneId && scenesById.has(hotspot.targetSceneId)) {
+            setCurrentSceneId(hotspot.targetSceneId);
+            setSelectedInfo(null);
+          } else {
+            alert('targetSceneId không tồn tại trong scenes.json');
+          }
+          return;
+        }
+        if (hotspot.type === 'video') {
+          openYoutube(hotspot.youtubeUrl);
+          return;
+        }
+        if (hotspot.type === 'link') {
+          window.open(hotspot.url, '_blank', 'noopener,noreferrer');
+          return;
+        }
+        setSelectedInfo(hotspot);
+      }, [openYoutube, scenesById]);
+
+      const requestFullscreen = useCallback(() => {
+        const el = document.documentElement;
+        if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen();
+        else if (document.exitFullscreen) document.exitFullscreen();
+      }, []);
+
+      const requestGyro = useCallback(async () => {
+        if (gyroEnabled) {
+          setGyroEnabled(false);
+          return;
+        }
+        try {
+          const DeviceOrientation = window.DeviceOrientationEvent;
+          if (DeviceOrientation && typeof DeviceOrientation.requestPermission === 'function') {
+            const result = await DeviceOrientation.requestPermission();
+            if (result !== 'granted') {
+              alert('Trình duyệt chưa cấp quyền cảm biến xoay.');
+              return;
+            }
+          }
+          setGyroEnabled(true);
+          setAutoRotate(false);
+        } catch (error) {
+          console.error(error);
+          alert('Không bật được cảm biến xoay trên trình duyệt này.');
+        }
+      }, [gyroEnabled]);
+
+      if (!loaded) {
+        return React.createElement('div', { className: 'loading' }, 'Đang tải dữ liệu 360...');
+      }
+
+      if (loadError || !currentScene) {
+        return React.createElement('div', { className: 'loading' },
+          React.createElement('div', { className: 'error-box' },
+            React.createElement('strong', null, 'Lỗi tải dữ liệu'),
+            React.createElement('div', { style: { marginTop: 8 } }, loadError || 'Không tìm thấy scene hiện tại.'),
+            React.createElement('div', { style: { marginTop: 10 } }, 'Hãy kiểm tra các file JSON trong resources/data và resources/bg.')
+          )
+        );
+      }
+
+      return (
+        React.createElement('div', { className: 'app-shell' },
+          React.createElement('div', { className: 'canvas-wrap' },
+            React.createElement(Suspense, { fallback: React.createElement('div', { className: 'loading' }, 'Đang tải ảnh 360...') },
+              React.createElement(SceneView, {
+                scene: currentScene,
+                onHotspotAction,
+                autoRotate,
+                gyroEnabled
+              })
+            )
+          ),
+
+          React.createElement('div', { className: 'topbar' },
+            React.createElement('div', { className: 'brand' },
+              React.createElement('div', { className: 'brand-title' }, 'R3F 360 VR Tour'),
+              React.createElement('div', { className: 'brand-subtitle' }, currentScene.title || currentScene.id)
+            ),
+            React.createElement('div', { className: 'top-actions' },
+              React.createElement('button', { className: `btn ${showPanel ? 'active' : ''}`, onClick: () => setShowPanel(v => !v) }, showPanel ? 'Ẩn kho' : 'Mở kho'),
+              React.createElement('button', { className: `btn ${autoRotate ? 'active' : ''}`, onClick: () => { setAutoRotate(v => !v); setGyroEnabled(false); } }, 'Tự xoay'),
+              React.createElement('button', { className: `btn ${gyroEnabled ? 'active' : ''}`, onClick: requestGyro }, 'Cảm biến'),
+              React.createElement('button', { className: 'btn', onClick: requestFullscreen }, 'Toàn màn hình')
+            )
+          ),
+
+          showPanel && React.createElement('div', { className: 'side-panel' },
+            React.createElement('div', { className: 'panel-card' },
+              React.createElement('div', { className: 'mobile-tabs' },
+                React.createElement('button', { className: `btn ${activeMobileTab === 'gallery' ? 'active' : ''}`, onClick: () => setActiveMobileTab('gallery') }, 'Ảnh 360'),
+                React.createElement('button', { className: `btn ${activeMobileTab === 'video' ? 'active' : ''}`, onClick: () => setActiveMobileTab('video') }, 'Video'),
+                React.createElement('button', { className: `btn ${activeMobileTab === 'help' ? 'active' : ''}`, onClick: () => setActiveMobileTab('help') }, 'Help')
+              ),
+
+              (activeMobileTab === 'gallery' || window.innerWidth > 760) && React.createElement(React.Fragment, null,
+                React.createElement('div', { className: 'panel-header' },
+                  React.createElement('span', null, 'Kho ảnh 360'),
+                  React.createElement('span', { className: 'hint' }, `${gallery.length} ảnh`)
+                ),
+                React.createElement('div', { className: 'panel-body' },
+                  React.createElement('div', { className: 'gallery-grid' },
+                    gallery.map(item => {
+                      const scene = sceneData.scenes.find(s => s.image === item.file || s.id === item.sceneId);
+                      const active = currentScene.image === item.file || currentScene.id === item.sceneId;
+                      return React.createElement('button', {
+                        key: item.id || item.file,
+                        className: `gallery-item ${active ? 'active' : ''}`,
+                        onClick: () => {
+                          if (item.sceneId && scenesById.has(item.sceneId)) setCurrentSceneId(item.sceneId);
+                          else if (scene) setCurrentSceneId(scene.id);
+                          else alert('Ảnh này chưa được khai báo thành scene trong resources/data/scenes.json');
+                        }
+                      },
+                        React.createElement('img', { className: 'thumb', src: BG_BASE_URL + item.file, alt: item.title || item.file }),
+                        React.createElement('div', null,
+                          React.createElement('div', { className: 'item-title' }, item.title || item.file),
+                          React.createElement('div', { className: 'item-desc' }, item.description || item.file)
+                        )
+                      );
+                    })
+                  )
+                )
+              ),
+
+              (activeMobileTab === 'video' || window.innerWidth > 760) && React.createElement(React.Fragment, null,
+                React.createElement('div', { className: 'panel-header desktop-only' },
+                  React.createElement('span', null, 'Video YouTube'),
+                  React.createElement('span', { className: 'hint' }, `${videos.length} video`)
+                ),
+                React.createElement('div', { className: 'panel-body' },
+                  videos.length === 0 && React.createElement('div', { className: 'hint' }, 'Chưa có video trong resources/video/videos.json'),
+                  videos.map(video => React.createElement('button', {
+                    key: video.url,
+                    className: 'video-item',
+                    onClick: () => openYoutube(video.url)
+                  },
+                    React.createElement('div', { className: 'thumb', style: { display: 'grid', placeItems: 'center', fontSize: 22 } }, '▶'),
+                    React.createElement('div', null,
+                      React.createElement('div', { className: 'item-title' }, video.title || 'Video YouTube'),
+                      React.createElement('div', { className: 'item-desc' }, video.description || 'Click để mở video')
+                    )
+                  ))
+                )
+              ),
+
+              (activeMobileTab === 'help' || window.innerWidth > 760) && React.createElement(React.Fragment, null,
+                React.createElement('div', { className: 'panel-header desktop-only' }, 'Hướng dẫn'),
+                React.createElement('div', { className: 'panel-body hint' },
+                  React.createElement('div', null, 'PC: kéo chuột để xoay, cuộn để zoom, click hotspot để tương tác.'),
+                  React.createElement('div', { style: { marginTop: 6 } }, 'Mobile: vuốt để xoay, bấm Cảm biến để thử xoay điện thoại.'),
+                  React.createElement('div', { style: { marginTop: 6 } }, 'Thêm ảnh/video bằng cách sửa các file JSON trong thư mục resources.')
+                )
+              )
+            )
+          ),
+
+          selectedInfo && React.createElement('div', { className: 'modal-backdrop', onClick: () => setSelectedInfo(null) },
+            React.createElement('div', { className: 'modal', onClick: event => event.stopPropagation() },
+              React.createElement('div', { className: 'modal-head' },
+                React.createElement('div', { className: 'modal-title' }, selectedInfo.title || 'Thông tin'),
+                React.createElement('button', { className: 'btn danger', onClick: () => setSelectedInfo(null) }, 'Đóng')
+              ),
+              React.createElement('div', { className: 'modal-body' },
+                React.createElement('p', null, selectedInfo.description || 'Chưa có mô tả.'),
+                selectedInfo.details && React.createElement('pre', { style: { whiteSpace: 'pre-wrap', color: '#cbd5e1' } }, selectedInfo.details)
+              )
+            )
+          ),
+
+          youtubeUrl && React.createElement('div', { className: 'modal-backdrop' },
+            React.createElement('button', { className: 'btn danger close-floating', onClick: () => setYoutubeUrl('') }, 'Đóng video'),
+            React.createElement('div', { className: 'youtube-frame-wrap' },
+              React.createElement('iframe', {
+                src: youtubeUrl,
+                title: 'YouTube video player',
+                allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+                allowFullScreen: true
+              })
+            )
+          )
+        )
+      );
+    }
+
+    createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
+</body>
+</html>

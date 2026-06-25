@@ -1,0 +1,70 @@
+{
+  "initialSceneId": "control-room",
+  "scenes": [
+    {
+      "id": "control-room",
+      "title": "Phòng điều khiển mẫu",
+      "image": "sample-control-room-360.jpg",
+      "hotspots": [
+        {
+          "id": "hs-scada-cabinet",
+          "type": "info",
+          "title": "Tủ SCADA",
+          "description": "Hotspot thông tin mẫu. Bạn có thể sửa title, description, yaw và pitch trong resources/data/scenes.json.",
+          "details": "Gợi ý dữ liệu thực tế:\n- Tên thiết bị\n- Chức năng\n- Trạng thái\n- Ghi chú vận hành\n- Link tài liệu nếu cần",
+          "yaw": -35,
+          "pitch": 2
+        },
+        {
+          "id": "hs-monitor-video",
+          "type": "video",
+          "title": "Video thao tác",
+          "description": "Click để mở YouTube iframe overlay.",
+          "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "yaw": 28,
+          "pitch": 5
+        },
+        {
+          "id": "hs-go-yard",
+          "type": "navigate",
+          "title": "Ra sân trạm",
+          "description": "Chuyển sang scene sân trạm mẫu.",
+          "targetSceneId": "substation-yard",
+          "yaw": 0,
+          "pitch": -8
+        }
+      ]
+    },
+    {
+      "id": "substation-yard",
+      "title": "Sân trạm mẫu",
+      "image": "sample-substation-360.jpg",
+      "hotspots": [
+        {
+          "id": "hs-transformer",
+          "type": "info",
+          "title": "Máy biến áp",
+          "description": "Hotspot thông tin thiết bị ngoài trời. Đây là nội dung mẫu, bạn thay bằng thông tin thực tế.",
+          "yaw": 42,
+          "pitch": -2
+        },
+        {
+          "id": "hs-yard-video",
+          "type": "video",
+          "title": "Video hiện trường",
+          "youtubeUrl": "https://youtu.be/dQw4w9WgXcQ",
+          "yaw": -45,
+          "pitch": 4
+        },
+        {
+          "id": "hs-back-control-room",
+          "type": "navigate",
+          "title": "Vào phòng điều khiển",
+          "targetSceneId": "control-room",
+          "yaw": 180,
+          "pitch": -6
+        }
+      ]
+    }
+  ]
+}

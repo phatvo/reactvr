@@ -1,0 +1,12 @@
+[
+  {
+    "title": "Video hướng dẫn mẫu",
+    "description": "Thay link này bằng video YouTube của bạn.",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  },
+  {
+    "title": "Video giới thiệu mẫu",
+    "description": "Ví dụ danh sách video hiển thị trên panel.",
+    "url": "https://youtu.be/dQw4w9WgXcQ"
+  }
+]
