@@ -241,8 +241,9 @@
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
       camera.position.set(0, 1.7, 7.4);
 
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+      // Giới hạn pixel ratio để khi di chuyển trên mobile ảnh không bị giật/vỡ do GPU quá tải.
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouchDevice ? 1.5 : 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.shadowMap.enabled = true;
@@ -545,19 +546,31 @@
           new THREE.MeshStandardMaterial({ color: 0x2b1a12, roughness: 0.45 })
         );
         frame.position.set(x, y, 0.08);
+        frame.renderOrder = 5;
         frame.castShadow = true;
         group.add(frame);
 
         const placeholder = makePlaceholderTexture(item.title || item.id);
-        const photoMat = new THREE.MeshBasicMaterial({ map: placeholder, toneMapped: false });
+        const photoMat = new THREE.MeshBasicMaterial({
+          map: placeholder,
+          toneMapped: false,
+          side: THREE.DoubleSide,
+          depthTest: true,
+          depthWrite: false,
+          polygonOffset: true,
+          polygonOffsetFactor: -3,
+          polygonOffsetUnits: -3
+        });
         const photo = new THREE.Mesh(new THREE.PlaneGeometry(photoW, photoH), photoMat);
-        photo.position.set(x, y, 0.115);
+        // Đẩy mặt ảnh ra xa khung/nền hơn để tránh z-fighting/flicker khi camera đang di chuyển.
+        photo.position.set(x, y, 0.16);
+        photo.renderOrder = 20;
         photo.userData = { kind: 'photo', exhibit: item, url: EXHIBIT_BASE_URL + item.file };
         group.add(photo);
         clickable.push(photo);
 
         loadTexture(EXHIBIT_BASE_URL + item.file, texture => {
-          texture.colorSpace = THREE.SRGBColorSpace;
+          prepareTextureForGallery(texture);
           photo.material.map = texture;
           photo.material.needsUpdate = true;
         });
@@ -624,6 +637,16 @@
       });
     }
 
+    function prepareTextureForGallery(texture) {
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.generateMipmaps = true;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.anisotropy = Math.min(renderer?.capabilities?.getMaxAnisotropy?.() || 1, isTouchDevice ? 4 : 8);
+      texture.needsUpdate = true;
+      return texture;
+    }
+
     function makePlaceholderTexture(text) {
       const canvas = document.createElement('canvas');
       canvas.width = 512;
@@ -640,8 +663,7 @@
       ctx.textBaseline = 'middle';
       wrapText(ctx, text, canvas.width / 2, canvas.height / 2, canvas.width - 80, 46);
       const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      return texture;
+      return prepareTextureForGallery(texture);
     }
 
     function makeTextMaterial(text, width, height, bgColor, textColor) {
