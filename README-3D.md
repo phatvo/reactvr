@@ -94,3 +94,8 @@ Ví dụ:
 - Bản này chạy tĩnh trên GitHub Pages, không cần `npm install`, không cần build.
 - Dùng Three.js từ CDN để dễ chạy như bản 360 hiện tại.
 - Dữ liệu ảnh vẫn dùng `resources/exhibit/exhibit.json` hiện tại.
+
+
+## Bản fix loading lâu
+
+File `index-3d.html` đã dùng `importmap` với CDN jsDelivr để OrbitControls resolve được module `three`. Nếu màn hình đứng ở “Đang tải phòng 3D...”, mở F12 > Console để kiểm tra lỗi CDN/CORS/404.
