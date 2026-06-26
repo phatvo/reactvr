@@ -167,10 +167,11 @@
     const movementConfig = {
       speed: 2.1,
       sprintMultiplier: 2.1,
-      minX: -5.15,
-      maxX: 5.15,
-      minZ: -4.35,
-      maxZ: 4.35
+      // Giới hạn vùng camera an toàn, không cho người xem xoay/đi quá sát tường.
+      minX: -4.35,
+      maxX: 4.35,
+      minZ: -3.75,
+      maxZ: 3.65
     };
 
     setTimeout(() => {
@@ -278,11 +279,11 @@
 
     function createFallbackNavigationPoints() {
       return [
-        { id: 'move-center', title: 'Giữa phòng', position: [0, 0.045, 1.6], cameraPosition: [0, 1.7, 1.6], target: [0, 1.45, -2.6] },
-        { id: 'move-front', title: 'Tường trung tâm', position: [0, 0.045, -2.35], cameraPosition: [0, 1.7, -2.35], target: [0, 1.55, -5] },
-        { id: 'move-left', title: 'Ngách trái', position: [-3.9, 0.045, -1.25], cameraPosition: [-3.9, 1.7, -1.25], target: [-5.95, 1.55, 0.55] },
-        { id: 'move-right', title: 'Ngách phải', position: [3.9, 0.045, -1.25], cameraPosition: [3.9, 1.7, -1.25], target: [5.95, 1.55, 0.55] },
-        { id: 'move-door', title: 'Gần cửa', position: [0, 0.045, 3.85], cameraPosition: [0, 1.7, 3.85], target: [0, 1.45, 0] }
+        { id: 'move-center', title: 'Giữa phòng', position: [0, 0.045, 1.2], cameraPosition: [0, 1.7, 1.2], target: [0, 1.45, -1.4] },
+        { id: 'move-front', title: 'Xem tường trung tâm', position: [0, 0.045, -1.65], cameraPosition: [0, 1.7, -1.65], target: [0, 1.55, -3.05] },
+        { id: 'move-left', title: 'Xem ngách trái', position: [-2.45, 0.045, -0.25], cameraPosition: [-2.45, 1.7, -0.25], target: [-3.55, 1.55, 0.18] },
+        { id: 'move-right', title: 'Xem ngách phải', position: [2.45, 0.045, -0.25], cameraPosition: [2.45, 1.7, -0.25], target: [3.55, 1.55, 0.18] },
+        { id: 'move-door', title: 'Khu vực cửa', position: [0, 0.045, 2.85], cameraPosition: [0, 1.7, 2.85], target: [0, 1.45, 0.65] }
       ];
     }
 
@@ -728,6 +729,12 @@
       controls.target.copy(camera.position).add(targetOffset);
     }
 
+    function clampCameraInsideSafeArea() {
+      if (!camera) return;
+      camera.position.x = THREE.MathUtils.clamp(camera.position.x, movementConfig.minX, movementConfig.maxX);
+      camera.position.z = THREE.MathUtils.clamp(camera.position.z, movementConfig.minZ, movementConfig.maxZ);
+    }
+
     function onPointerDown(event) {
       if (modalBackdrop.style.display === 'flex') return;
       const rect = renderer.domElement.getBoundingClientRect();
@@ -940,6 +947,7 @@
       } else {
         controls.update();
       }
+      clampCameraInsideSafeArea();
       renderer.render(scene, camera);
     }
   </script>
