@@ -80,11 +80,14 @@
       <button id="btnReset">Reset góc nhìn</button>
       <button id="btnAuto">Tự xoay: Tắt</button>
       <button id="btnWalk">Di chuyển: Bật</button>
+      <button id="btnNav">Điểm di chuyển: Hiện</button>
+      <button id="btnSensor">Cảm biến: Tắt</button>
+      <button id="btnSensorCalib" style="display:none;">Hiệu chỉnh cảm biến</button>
       <button id="btnFullscreen">Toàn màn hình</button>
     </div>
     <div class="help">
       <b>Hướng dẫn</b>
-      Kéo chuột để xoay, lăn chuột để zoom. Dùng W/A/S/D hoặc phím mũi tên để di chuyển, giữ Shift để đi nhanh. Trên điện thoại dùng cụm phím ảo bên dưới.
+      Kéo chuột để xoay, lăn chuột để zoom. Dùng W/A/S/D hoặc phím mũi tên để di chuyển, giữ Shift để đi nhanh. Click vòng tròn xanh để di chuyển nhanh. Trên điện thoại, bấm Cảm biến để xoay máy nhìn quanh phòng.
     </div>
     <div class="move-pad" id="movePad" aria-label="Cụm phím di chuyển">
       <button class="up" data-move="forward" title="Tiến">▲</button>
@@ -136,9 +139,22 @@
     let camera, scene, renderer, controls;
     let raycaster, pointer;
     let clickable = [];
+    let navigationMarkerGroups = [];
+    let navigationVisible = true;
     let autoRotate = false;
     let movementEnabled = true;
     let exhibitById = new Map();
+    let teleportTween = null;
+    let sensorEnabled = false;
+    let sensorPermissionAsked = false;
+    let sensorOrientation = null;
+    let sensorBaseReady = false;
+    let sensorOffsetQuat = new THREE.Quaternion();
+    const sensorEuler = new THREE.Euler();
+    const sensorAbsQuat = new THREE.Quaternion();
+    const sensorScreenQuat = new THREE.Quaternion();
+    const sensorZAxis = new THREE.Vector3(0, 0, 1);
+    const sensorQ1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
 
     const clock = new THREE.Clock();
     const movementState = {
@@ -212,12 +228,16 @@
       if (gallery3d.camera?.target) controls.target.fromArray(gallery3d.camera.target);
 
       buildNiches(gallery3d.niches || []);
+      buildNavigationPoints(gallery3d.navigationPoints || createFallbackNavigationPoints());
 
       window.addEventListener('resize', onWindowResize);
       renderer.domElement.addEventListener('pointerdown', onPointerDown);
       document.getElementById('btnReset').addEventListener('click', resetView);
       document.getElementById('btnAuto').addEventListener('click', toggleAutoRotate);
       document.getElementById('btnWalk').addEventListener('click', toggleMovement);
+      document.getElementById('btnNav').addEventListener('click', toggleNavigationMarkers);
+      document.getElementById('btnSensor').addEventListener('click', toggleSensor);
+      document.getElementById('btnSensorCalib').addEventListener('click', calibrateSensor);
       document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
       setupMovePad();
       modalClose.addEventListener('click', closeModal);
@@ -254,6 +274,16 @@
           { id: 'niche-5', title: 'Góc kỷ niệm 5', items: ['25','26','27','28','29','30'], position: [5.92, 1.72, 0.6], rotation: [0, -Math.PI / 2, 0], size: [2.8, 2.25], photoSize: [0.74, 0.50] }
         ]
       };
+    }
+
+    function createFallbackNavigationPoints() {
+      return [
+        { id: 'move-center', title: 'Giữa phòng', position: [0, 0.045, 1.6], cameraPosition: [0, 1.7, 1.6], target: [0, 1.45, -2.6] },
+        { id: 'move-front', title: 'Tường trung tâm', position: [0, 0.045, -2.35], cameraPosition: [0, 1.7, -2.35], target: [0, 1.55, -5] },
+        { id: 'move-left', title: 'Ngách trái', position: [-3.9, 0.045, -1.25], cameraPosition: [-3.9, 1.7, -1.25], target: [-5.95, 1.55, 0.55] },
+        { id: 'move-right', title: 'Ngách phải', position: [3.9, 0.045, -1.25], cameraPosition: [3.9, 1.7, -1.25], target: [5.95, 1.55, 0.55] },
+        { id: 'move-door', title: 'Gần cửa', position: [0, 0.045, 3.85], cameraPosition: [0, 1.7, 3.85], target: [0, 1.45, 0] }
+      ];
     }
 
     function createFallbackExhibits() {
@@ -448,7 +478,7 @@
         const photoMat = new THREE.MeshBasicMaterial({ map: placeholder, toneMapped: false });
         const photo = new THREE.Mesh(new THREE.PlaneGeometry(photoW, photoH), photoMat);
         photo.position.set(x, y, 0.115);
-        photo.userData = { exhibit: item, url: EXHIBIT_BASE_URL + item.file };
+        photo.userData = { kind: 'photo', exhibit: item, url: EXHIBIT_BASE_URL + item.file };
         group.add(photo);
         clickable.push(photo);
 
@@ -457,6 +487,59 @@
           photo.material.map = texture;
           photo.material.needsUpdate = true;
         });
+      });
+    }
+
+    function buildNavigationPoints(points) {
+      points.forEach(point => {
+        const group = new THREE.Group();
+        group.name = point.id || point.title || 'navigation-point';
+        const position = point.position || [0, 0.045, 0];
+        group.position.set(position[0], position[1] || 0.045, position[2]);
+        scene.add(group);
+        navigationMarkerGroups.push(group);
+
+        const discMat = new THREE.MeshStandardMaterial({
+          color: 0x1e88ff,
+          roughness: 0.28,
+          metalness: 0.05,
+          emissive: 0x0a4d9b,
+          emissiveIntensity: 0.35,
+          transparent: true,
+          opacity: 0.86
+        });
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+
+        const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.035, 48), discMat);
+        disc.rotation.x = Math.PI / 2;
+        disc.userData = { kind: 'move', navigationPoint: point };
+        disc.castShadow = false;
+        disc.receiveShadow = false;
+        group.add(disc);
+        clickable.push(disc);
+
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.018, 12, 64), ringMat);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = 0.018;
+        ring.userData = { kind: 'move', navigationPoint: point };
+        group.add(ring);
+        clickable.push(ring);
+
+        const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.22, 3), ringMat);
+        arrow.position.set(0, 0.04, -0.02);
+        arrow.rotation.x = Math.PI / 2;
+        arrow.rotation.z = Math.PI;
+        arrow.userData = { kind: 'move', navigationPoint: point };
+        group.add(arrow);
+        clickable.push(arrow);
+
+        const labelMat = makeTextMaterial(point.title || 'Di chuyển', 420, 96, 'rgba(17,24,39,0.92)', '#ffffff');
+        const label = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 0.22), labelMat);
+        label.position.set(0, 0.06, 0.62);
+        label.rotation.x = -Math.PI / 2;
+        label.userData = { kind: 'move', navigationPoint: point };
+        group.add(label);
+        clickable.push(label);
       });
     }
 
@@ -556,7 +639,7 @@
         closeModal();
         return;
       }
-      if (!movementEnabled || modalBackdrop.style.display === 'flex') return;
+      if (!movementEnabled || teleportTween || modalBackdrop.style.display === 'flex') return;
 
       const handled = setMovementKey(event.code, true);
       if (handled) event.preventDefault();
@@ -602,6 +685,12 @@
       movementState.sprint = false;
     }
 
+    function toggleNavigationMarkers() {
+      navigationVisible = !navigationVisible;
+      navigationMarkerGroups.forEach(group => { group.visible = navigationVisible; });
+      document.getElementById('btnNav').textContent = 'Điểm di chuyển: ' + (navigationVisible ? 'Hiện' : 'Ẩn');
+    }
+
     function toggleMovement() {
       movementEnabled = !movementEnabled;
       clearMovementState();
@@ -610,7 +699,7 @@
     }
 
     function updateMovement(delta) {
-      if (!movementEnabled || modalBackdrop.style.display === 'flex') return;
+      if (!movementEnabled || teleportTween || modalBackdrop.style.display === 'flex') return;
 
       const forwardAmount = (movementState.forward ? 1 : 0) - (movementState.backward ? 1 : 0);
       const strafeAmount = (movementState.right ? 1 : 0) - (movementState.left ? 1 : 0);
@@ -648,8 +737,43 @@
       const hits = raycaster.intersectObjects(clickable, false);
       if (hits.length > 0) {
         const object = hits[0].object;
+        if (object.userData.kind === 'move') {
+          moveToNavigationPoint(object.userData.navigationPoint);
+          return;
+        }
         openExhibit(object.userData.exhibit, object.userData.url);
       }
+    }
+
+    function moveToNavigationPoint(point) {
+      if (!point) return;
+      clearMovementState();
+      const currentTarget = controls.target.clone();
+      const destinationPosition = new THREE.Vector3().fromArray(point.cameraPosition || [point.position?.[0] || 0, 1.7, point.position?.[2] || 0]);
+      const destinationTarget = new THREE.Vector3().fromArray(point.target || [0, 1.45, 0]);
+
+      destinationPosition.x = THREE.MathUtils.clamp(destinationPosition.x, movementConfig.minX, movementConfig.maxX);
+      destinationPosition.z = THREE.MathUtils.clamp(destinationPosition.z, movementConfig.minZ, movementConfig.maxZ);
+
+      teleportTween = {
+        elapsed: 0,
+        duration: 0.75,
+        fromPosition: camera.position.clone(),
+        toPosition: destinationPosition,
+        fromTarget: currentTarget,
+        toTarget: destinationTarget
+      };
+    }
+
+    function updateTeleport(delta) {
+      if (!teleportTween) return false;
+      teleportTween.elapsed += delta;
+      const t = Math.min(teleportTween.elapsed / teleportTween.duration, 1);
+      const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      camera.position.lerpVectors(teleportTween.fromPosition, teleportTween.toPosition, eased);
+      controls.target.lerpVectors(teleportTween.fromTarget, teleportTween.toTarget, eased);
+      if (t >= 1) teleportTween = null;
+      return true;
     }
 
     function openExhibit(item, url) {
@@ -667,9 +791,15 @@
 
     function resetView() {
       clearMovementState();
+      teleportTween = null;
       camera.position.set(0, 1.7, 6.5);
       controls.target.set(0, 1.45, 0);
-      controls.update();
+      if (sensorEnabled) {
+        sensorBaseReady = false;
+        calibrateSensor();
+      } else {
+        controls.update();
+      }
     }
 
     function toggleAutoRotate() {
@@ -677,6 +807,113 @@
       controls.autoRotate = autoRotate;
       controls.autoRotateSpeed = 0.7;
       document.getElementById('btnAuto').textContent = 'Tự xoay: ' + (autoRotate ? 'Bật' : 'Tắt');
+    }
+
+    async function toggleSensor() {
+      if (sensorEnabled) {
+        disableSensor();
+        return;
+      }
+      await enableSensor();
+    }
+
+    async function enableSensor() {
+      try {
+        if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          sensorPermissionAsked = true;
+          if (permission !== 'granted') {
+            alert('Trình duyệt chưa cấp quyền cảm biến. Vui lòng cho phép Motion & Orientation Access.');
+            return;
+          }
+        }
+
+        if (!window.DeviceOrientationEvent) {
+          alert('Thiết bị/trình duyệt này không hỗ trợ cảm biến xoay.');
+          return;
+        }
+
+        window.addEventListener('deviceorientation', onDeviceOrientation, true);
+        window.addEventListener('orientationchange', onScreenOrientationChange, true);
+        onScreenOrientationChange();
+
+        sensorEnabled = true;
+        sensorBaseReady = false;
+        clearMovementState();
+        controls.enabled = false;
+        controls.enableRotate = false;
+        document.getElementById('btnSensor').textContent = 'Cảm biến: Bật';
+        document.getElementById('btnSensorCalib').style.display = 'inline-block';
+
+        setTimeout(() => {
+          if (sensorEnabled && !sensorOrientation) {
+            alert('Chưa nhận được dữ liệu cảm biến. Trên iPhone/iPad, cần mở bằng HTTPS và bấm cho phép cảm biến.');
+          }
+        }, 1800);
+      } catch (error) {
+        console.error('Không bật được cảm biến:', error);
+        alert('Không bật được cảm biến xoay trên thiết bị này.');
+      }
+    }
+
+    function disableSensor() {
+      sensorEnabled = false;
+      sensorBaseReady = false;
+      window.removeEventListener('deviceorientation', onDeviceOrientation, true);
+      window.removeEventListener('orientationchange', onScreenOrientationChange, true);
+      controls.enabled = true;
+      controls.enableRotate = true;
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      controls.target.copy(camera.position).addScaledVector(forward, 4);
+      controls.update();
+      document.getElementById('btnSensor').textContent = 'Cảm biến: Tắt';
+      document.getElementById('btnSensorCalib').style.display = 'none';
+    }
+
+    function onDeviceOrientation(event) {
+      // alpha/beta/gamma là độ. Chuyển sang radian để dựng quaternion cho camera.
+      if (event.alpha == null || event.beta == null || event.gamma == null) return;
+      sensorOrientation = {
+        alpha: THREE.MathUtils.degToRad(event.alpha),
+        beta: THREE.MathUtils.degToRad(event.beta),
+        gamma: THREE.MathUtils.degToRad(event.gamma)
+      };
+      if (sensorEnabled && !sensorBaseReady) calibrateSensor();
+    }
+
+    function onScreenOrientationChange() {
+      const angle = screen.orientation?.angle ?? window.orientation ?? 0;
+      sensorScreenQuat.setFromAxisAngle(sensorZAxis, -THREE.MathUtils.degToRad(angle));
+    }
+
+    function getDeviceQuaternion() {
+      if (!sensorOrientation) return null;
+      // Công thức tương đương DeviceOrientationControls: beta=x, alpha=y, -gamma=z, order YXZ.
+      sensorEuler.set(sensorOrientation.beta, sensorOrientation.alpha, -sensorOrientation.gamma, 'YXZ');
+      sensorAbsQuat.setFromEuler(sensorEuler);
+      sensorAbsQuat.multiply(sensorQ1);
+      sensorAbsQuat.multiply(sensorScreenQuat);
+      return sensorAbsQuat.clone();
+    }
+
+    function calibrateSensor() {
+      const q = getDeviceQuaternion();
+      if (!q) {
+        alert('Chưa có dữ liệu cảm biến để hiệu chỉnh. Hãy xoay nhẹ điện thoại rồi thử lại.');
+        return;
+      }
+      // Giữ nguyên góc nhìn hiện tại tại thời điểm bật/hiệu chỉnh, tránh camera bị nhảy hướng.
+      sensorOffsetQuat.copy(camera.quaternion).multiply(q.invert());
+      sensorBaseReady = true;
+    }
+
+    function updateSensorCamera() {
+      if (!sensorEnabled || !sensorBaseReady) return;
+      const q = getDeviceQuaternion();
+      if (!q) return;
+      camera.quaternion.copy(sensorOffsetQuat).multiply(q);
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      controls.target.copy(camera.position).addScaledVector(forward, 4);
     }
 
     function toggleFullscreen() {
@@ -696,8 +933,13 @@
     function animate() {
       requestAnimationFrame(animate);
       const delta = Math.min(clock.getDelta(), 0.05);
+      updateTeleport(delta);
       updateMovement(delta);
-      controls.update();
+      if (sensorEnabled) {
+        updateSensorCamera();
+      } else {
+        controls.update();
+      }
       renderer.render(scene, camera);
     }
   </script>
