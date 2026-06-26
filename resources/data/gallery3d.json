@@ -213,6 +213,46 @@
       "note": "Cách tường sau khoảng 4.4m để xoay 360 không bị xuyên tường."
     },
     {
+      "id": "move-niche-1",
+      "title": "Đến góc kỷ niệm 1",
+      "position": [
+        -6.0,
+        0.045,
+        -5.6
+      ],
+      "cameraPosition": [
+        -6.0,
+        1.7,
+        -5.6
+      ],
+      "target": [
+        -6.0,
+        1.9,
+        -9.5
+      ],
+      "note": "Điểm xanh đứng trước Góc kỷ niệm 1, cách tường sau khoảng 4.4m để xoay 360 an toàn."
+    },
+    {
+      "id": "move-niche-3",
+      "title": "Đến góc kỷ niệm 3",
+      "position": [
+        6.0,
+        0.045,
+        -5.6
+      ],
+      "cameraPosition": [
+        6.0,
+        1.7,
+        -5.6
+      ],
+      "target": [
+        6.0,
+        1.9,
+        -9.5
+      ],
+      "note": "Điểm xanh đứng trước Góc kỷ niệm 3, cách tường sau khoảng 4.4m để xoay 360 an toàn."
+    },
+    {
       "id": "move-left",
       "title": "Xem ngách trái",
       "position": [
