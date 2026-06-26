@@ -168,6 +168,14 @@
       dragXSign: -1,
       dragYSign: 1
     };
+    const sensorConfig = {
+      // Điều chỉnh chiều cảm biến xoay điện thoại.
+      // yawSign = 1: xoay điện thoại sang phải -> view quay sang phải.
+      // pitchSign = 1: nghiêng lên/xuống theo chiều tự nhiên hiện tại.
+      // Nếu thiết bị cụ thể vẫn bị ngược, đổi từng dấu 1 <-> -1.
+      yawSign: 1,
+      pitchSign: 1
+    };
     const touchLook = {
       active: false,
       pointerId: null,
@@ -1053,8 +1061,10 @@
       // Chế độ xem 360 trên điện thoại: dùng alpha làm yaw toàn vòng 360 độ,
       // dùng beta làm pitch và giới hạn pitch để không lật ngược camera.
       // Cách này ổn định hơn cho tour phòng 3D so với DeviceOrientationControls mặc định.
-      const yaw = -sensorOrientation.alpha;
-      const pitch = THREE.MathUtils.clamp(sensorOrientation.beta - Math.PI / 2, -1.25, 1.25);
+      // Đảo lại chiều cảm biến theo phản hồi: cảm biến không còn ngược chiều view.
+      // yawSign/pitchSign đặt ở sensorConfig để có thể hiệu chỉnh nhanh theo từng dòng máy.
+      const yaw = sensorOrientation.alpha * sensorConfig.yawSign;
+      const pitch = THREE.MathUtils.clamp((sensorOrientation.beta - Math.PI / 2) * sensorConfig.pitchSign, -1.25, 1.25);
       sensorEuler.set(pitch, yaw, 0, 'YXZ');
       sensorAbsQuat.setFromEuler(sensorEuler);
       return sensorAbsQuat.clone();
