@@ -165,9 +165,14 @@
       // Điều chỉnh chiều kéo trên điện thoại.
       // dragXSign = -1: kéo tay sang phải -> view quay theo hướng phải trong bản phản hồi mới.
       // dragYSign = 1 : kéo tay lên/xuống không bị ngược theo phản hồi thực tế.
-      // Nếu muốn đảo lại riêng từng trục, đổi dấu 1 <-> -1.
       dragXSign: -1,
-      dragYSign: 1
+      dragYSign: 1,
+      // Điều chỉnh chiều kéo chuột trên PC. Tách riêng để không ảnh hưởng thao tác ngón tay.
+      // mouseXSign = -1: kéo chuột sang phải -> view quay sang phải.
+      // mouseYSign = 1 : kéo chuột lên/xuống theo cùng cảm giác với thao tác touch.
+      // Nếu muốn đảo lại riêng từng trục, đổi dấu 1 <-> -1.
+      mouseXSign: -1,
+      mouseYSign: 1
     };
     const sensorConfig = {
       // Điều chỉnh chiều cảm biến xoay điện thoại.
@@ -191,7 +196,7 @@
     let canvasPointerDown = null;
     const lookDirection = new THREE.Vector3();
     const lookTarget = new THREE.Vector3();
-    // Khi drag bằng ngón tay trên điện thoại, chỉ xoay góc nhìn tại chỗ.
+    // Khi drag chuột hoặc ngón tay, chỉ xoay góc nhìn tại chỗ.
     // Biến này khóa vị trí camera để tránh bị orbit/pan/teleport ngoài ý muốn trong lúc drag.
     const touchLookLockedPosition = new THREE.Vector3();
 
@@ -261,12 +266,13 @@
       controls.maxPolarAngle = Math.PI * 0.72;
       controls.minPolarAngle = Math.PI * 0.06;
       controls.enablePan = false;
-      controls.rotateSpeed = -0.65; // Đảo chiều kéo chuột: drag sang phải -> view quay sang phải
-      // Trên điện thoại dùng chế độ xoay nhìn tại chỗ bằng code riêng.
-      // Cách này cho phép xoay ngang đủ 360 độ và không bị OrbitControls kéo camera vòng quanh target.
-      if (isTouchDevice) {
-        controls.enabled = false;
-      }
+      controls.rotateSpeed = -0.65;
+      // PC và điện thoại đều dùng chế độ xoay nhìn tại chỗ bằng code riêng.
+      // Không dùng OrbitControls để tránh camera bị orbit ra sau/vượt khỏi tường phòng.
+      controls.enabled = false;
+      controls.enableRotate = false;
+      controls.enablePan = false;
+      controls.enableZoom = false;
       renderer.domElement.style.touchAction = 'none';
       controls.update();
 
@@ -831,8 +837,12 @@
       camera.position.z = THREE.MathUtils.clamp(camera.position.z, movementConfig.minZ, movementConfig.maxZ);
     }
 
-    function isTouchLookPointer(event) {
-      return isTouchDevice && event.pointerType !== 'mouse' && !sensorEnabled;
+    function isLookPointer(event) {
+      // Cho phép cả chuột PC và ngón tay điện thoại xoay nhìn tại chỗ.
+      // Chỉ bỏ qua khi cảm biến điện thoại đang bật hoặc không phải chuột trái.
+      if (sensorEnabled) return false;
+      if (event.pointerType === 'mouse' && event.button !== 0) return false;
+      return true;
     }
 
     function syncControlsTargetFromCamera(distance = 4) {
@@ -871,7 +881,7 @@
         moved: false
       };
 
-      if (isTouchLookPointer(event)) {
+      if (isLookPointer(event)) {
         event.preventDefault();
         touchLook.active = true;
         touchLook.pointerId = event.pointerId;
@@ -903,13 +913,16 @@
         touchLook.moved = true;
       }
 
-      // Điều khiển xoay nhìn bằng ngón tay trên điện thoại.
-      // Bản này đảo chiều kéo theo phản hồi: drag ngón tay và view không còn bị ngược.
-      // yaw không bị giới hạn để có thể xoay ngang đủ 360 độ tại mọi vị trí.
-      const yaw = touchLook.startYaw + dx * lookConfig.sensitivity * lookConfig.dragXSign;
-      const pitch = touchLook.startPitch + dy * lookConfig.sensitivity * lookConfig.dragYSign;
-      // Giữ nguyên vị trí camera khi drag: chỉ đổi hướng nhìn 360, không dịch chuyển trong phòng.
+      // Điều khiển xoay nhìn tại chỗ cho cả PC và điện thoại.
+      // yaw không bị giới hạn để xoay ngang đủ 360 độ ở mọi vị trí.
+      const isMouse = event.pointerType === 'mouse';
+      const xSign = isMouse ? lookConfig.mouseXSign : lookConfig.dragXSign;
+      const ySign = isMouse ? lookConfig.mouseYSign : lookConfig.dragYSign;
+      const yaw = touchLook.startYaw + dx * lookConfig.sensitivity * xSign;
+      const pitch = touchLook.startPitch + dy * lookConfig.sensitivity * ySign;
+      // Giữ nguyên vị trí camera khi drag: chỉ đổi hướng nhìn, không orbit/pan ra ngoài phòng.
       camera.position.copy(touchLookLockedPosition);
+      clampCameraInsideSafeArea();
       applyTouchLook(yaw, pitch);
     }
 
@@ -1077,12 +1090,14 @@
       sensorBaseReady = false;
       window.removeEventListener('deviceorientation', onDeviceOrientation, true);
       window.removeEventListener('orientationchange', onScreenOrientationChange, true);
-      controls.enabled = true;
-      controls.enableRotate = true;
+      // Sau khi tắt cảm biến, vẫn giữ chế độ xoay nhìn tại chỗ bằng drag chuột/ngón tay.
+      controls.enabled = false;
+      controls.enableRotate = false;
+      controls.enablePan = false;
+      controls.enableZoom = false;
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
       controls.target.copy(camera.position).addScaledVector(forward, 4);
       syncTouchLookFromCamera();
-      if (controls.enabled) controls.update();
       document.getElementById('btnSensor').textContent = 'Cảm biến: Tắt';
       document.getElementById('btnSensorCalib').style.display = 'none';
     }
@@ -1158,12 +1173,11 @@
       updateMovement(delta);
       if (sensorEnabled) {
         updateSensorCamera();
-      } else if (isTouchDevice) {
-        if (autoRotate && !touchLook.active) {
-          applyTouchLook(touchLook.yaw + delta * 0.18, touchLook.pitch);
-        }
+      } else if (autoRotate && !touchLook.active) {
+        applyTouchLook(touchLook.yaw + delta * 0.18, touchLook.pitch);
       } else {
-        controls.update();
+        // Không gọi OrbitControls trên PC để camera không orbit ra ngoài phòng.
+        syncControlsTargetFromCamera(4);
       }
       clampCameraInsideSafeArea();
       renderer.render(scene, camera);
