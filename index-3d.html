@@ -217,7 +217,7 @@
       width: 20,
       depth: 20,
       height: 6,
-      doorWidth: 3.0,
+      doorWidth: 4.5,
       doorHeight: 2.7
     };
 
@@ -261,7 +261,7 @@
       controls.maxPolarAngle = Math.PI * 0.72;
       controls.minPolarAngle = Math.PI * 0.06;
       controls.enablePan = false;
-      controls.rotateSpeed = 0.65;
+      controls.rotateSpeed = -0.65; // Đảo chiều kéo chuột: drag sang phải -> view quay sang phải
       // Trên điện thoại dùng chế độ xoay nhìn tại chỗ bằng code riêng.
       // Cách này cho phép xoay ngang đủ 360 độ và không bị OrbitControls kéo camera vòng quanh target.
       if (isTouchDevice) {
