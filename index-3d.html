@@ -46,10 +46,30 @@
       background: rgba(255,255,255,.92); color: #111827; padding: 14px 18px; border-radius: 14px;
       box-shadow: 0 10px 30px rgba(0,0,0,.25); font-weight: 600;
     }
+    .move-pad {
+      position: absolute; left: 18px; bottom: 18px; z-index: 55;
+      display: grid; grid-template-columns: 54px 54px 54px; grid-template-rows: 54px 54px 54px;
+      gap: 8px; padding: 10px; border-radius: 18px;
+      background: rgba(15, 18, 22, .56); backdrop-filter: blur(8px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+      user-select: none; touch-action: none;
+    }
+    .move-pad button {
+      border: 1px solid rgba(255,255,255,.25); border-radius: 16px;
+      background: rgba(255,255,255,.14); color: #fff; font-size: 20px; font-weight: 800;
+      cursor: pointer; touch-action: none;
+    }
+    .move-pad button:active { background: rgba(255,255,255,.30); transform: scale(.96); }
+    .move-pad .up { grid-column: 2; grid-row: 1; }
+    .move-pad .left { grid-column: 1; grid-row: 2; }
+    .move-pad .center { grid-column: 2; grid-row: 2; font-size: 12px; font-weight: 700; opacity: .85; }
+    .move-pad .right { grid-column: 3; grid-row: 2; }
+    .move-pad .down { grid-column: 2; grid-row: 3; }
     @media (max-width: 768px) {
       .topbar { left: 10px; right: 10px; top: 10px; padding: 8px; }
       .help { display: none; }
       .topbar strong { width: 100%; }
+      .move-pad { left: 10px; bottom: 10px; transform: scale(.9); transform-origin: left bottom; }
     }
   </style>
 </head>
@@ -59,11 +79,19 @@
       <strong>Phòng truyền thống 3D</strong>
       <button id="btnReset">Reset góc nhìn</button>
       <button id="btnAuto">Tự xoay: Tắt</button>
+      <button id="btnWalk">Di chuyển: Bật</button>
       <button id="btnFullscreen">Toàn màn hình</button>
     </div>
     <div class="help">
       <b>Hướng dẫn</b>
-      Kéo chuột để xoay, lăn chuột để zoom. Click vào ảnh trưng bày để xem ảnh lớn. Trên điện thoại: vuốt để xoay, chạm ảnh để mở.
+      Kéo chuột để xoay, lăn chuột để zoom. Dùng W/A/S/D hoặc phím mũi tên để di chuyển, giữ Shift để đi nhanh. Trên điện thoại dùng cụm phím ảo bên dưới.
+    </div>
+    <div class="move-pad" id="movePad" aria-label="Cụm phím di chuyển">
+      <button class="up" data-move="forward" title="Tiến">▲</button>
+      <button class="left" data-move="left" title="Sang trái">◀</button>
+      <button class="center" data-move="stop" title="Dừng">Dừng</button>
+      <button class="right" data-move="right" title="Sang phải">▶</button>
+      <button class="down" data-move="backward" title="Lùi">▼</button>
     </div>
     <div id="loading" class="loading">Đang tải phòng 3D...</div>
   </div>
@@ -109,7 +137,25 @@
     let raycaster, pointer;
     let clickable = [];
     let autoRotate = false;
+    let movementEnabled = true;
     let exhibitById = new Map();
+
+    const clock = new THREE.Clock();
+    const movementState = {
+      forward: false,
+      backward: false,
+      left: false,
+      right: false,
+      sprint: false
+    };
+    const movementConfig = {
+      speed: 2.1,
+      sprintMultiplier: 2.1,
+      minX: -5.15,
+      maxX: 5.15,
+      minZ: -4.35,
+      maxZ: 4.35
+    };
 
     setTimeout(() => {
       if (loading && loading.style.display !== 'none') {
@@ -171,14 +217,15 @@
       renderer.domElement.addEventListener('pointerdown', onPointerDown);
       document.getElementById('btnReset').addEventListener('click', resetView);
       document.getElementById('btnAuto').addEventListener('click', toggleAutoRotate);
+      document.getElementById('btnWalk').addEventListener('click', toggleMovement);
       document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+      setupMovePad();
       modalClose.addEventListener('click', closeModal);
       modalBackdrop.addEventListener('click', event => {
         if (event.target === modalBackdrop) closeModal();
       });
-      window.addEventListener('keydown', event => {
-        if (event.key === 'Escape') closeModal();
-      });
+      window.addEventListener('keydown', onKeyDown);
+      window.addEventListener('keyup', onKeyUp);
 
       loading.style.display = 'none';
       animate();
@@ -478,6 +525,120 @@
       lines.slice(0, 3).forEach((l, i) => ctx.fillText(l, x, startY + i * lineHeight));
     }
 
+
+    function setupMovePad() {
+      const pad = document.getElementById('movePad');
+      if (!pad) return;
+      pad.querySelectorAll('[data-move]').forEach(button => {
+        const direction = button.dataset.move;
+        if (direction === 'stop') {
+          button.addEventListener('click', clearMovementState);
+          return;
+        }
+        const start = event => {
+          event.preventDefault();
+          if (!movementEnabled) return;
+          movementState[direction] = true;
+        };
+        const stop = event => {
+          event.preventDefault();
+          movementState[direction] = false;
+        };
+        button.addEventListener('pointerdown', start);
+        button.addEventListener('pointerup', stop);
+        button.addEventListener('pointerleave', stop);
+        button.addEventListener('pointercancel', stop);
+      });
+    }
+
+    function onKeyDown(event) {
+      if (event.key === 'Escape') {
+        closeModal();
+        return;
+      }
+      if (!movementEnabled || modalBackdrop.style.display === 'flex') return;
+
+      const handled = setMovementKey(event.code, true);
+      if (handled) event.preventDefault();
+    }
+
+    function onKeyUp(event) {
+      const handled = setMovementKey(event.code, false);
+      if (handled) event.preventDefault();
+    }
+
+    function setMovementKey(code, isPressed) {
+      switch (code) {
+        case 'KeyW':
+        case 'ArrowUp':
+          movementState.forward = isPressed;
+          return true;
+        case 'KeyS':
+        case 'ArrowDown':
+          movementState.backward = isPressed;
+          return true;
+        case 'KeyA':
+        case 'ArrowLeft':
+          movementState.left = isPressed;
+          return true;
+        case 'KeyD':
+        case 'ArrowRight':
+          movementState.right = isPressed;
+          return true;
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          movementState.sprint = isPressed;
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    function clearMovementState() {
+      movementState.forward = false;
+      movementState.backward = false;
+      movementState.left = false;
+      movementState.right = false;
+      movementState.sprint = false;
+    }
+
+    function toggleMovement() {
+      movementEnabled = !movementEnabled;
+      clearMovementState();
+      document.getElementById('btnWalk').textContent = 'Di chuyển: ' + (movementEnabled ? 'Bật' : 'Tắt');
+      document.getElementById('movePad').style.display = movementEnabled ? 'grid' : 'none';
+    }
+
+    function updateMovement(delta) {
+      if (!movementEnabled || modalBackdrop.style.display === 'flex') return;
+
+      const forwardAmount = (movementState.forward ? 1 : 0) - (movementState.backward ? 1 : 0);
+      const strafeAmount = (movementState.right ? 1 : 0) - (movementState.left ? 1 : 0);
+      if (forwardAmount === 0 && strafeAmount === 0) return;
+
+      const forward = new THREE.Vector3();
+      camera.getWorldDirection(forward);
+      forward.y = 0;
+      if (forward.lengthSq() < 0.0001) return;
+      forward.normalize();
+
+      const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+      const move = new THREE.Vector3();
+      move.addScaledVector(forward, forwardAmount);
+      move.addScaledVector(right, strafeAmount);
+      if (move.lengthSq() < 0.0001) return;
+      move.normalize();
+
+      const speed = movementConfig.speed * (movementState.sprint ? movementConfig.sprintMultiplier : 1);
+      move.multiplyScalar(speed * delta);
+
+      const targetOffset = controls.target.clone().sub(camera.position);
+      camera.position.add(move);
+      camera.position.x = THREE.MathUtils.clamp(camera.position.x, movementConfig.minX, movementConfig.maxX);
+      camera.position.z = THREE.MathUtils.clamp(camera.position.z, movementConfig.minZ, movementConfig.maxZ);
+      controls.target.copy(camera.position).add(targetOffset);
+    }
+
     function onPointerDown(event) {
       if (modalBackdrop.style.display === 'flex') return;
       const rect = renderer.domElement.getBoundingClientRect();
@@ -492,6 +653,7 @@
     }
 
     function openExhibit(item, url) {
+      clearMovementState();
       modalTitle.textContent = item.title || 'Ảnh trưng bày';
       modalDescription.textContent = item.description || '';
       modalImage.src = url;
@@ -504,6 +666,7 @@
     }
 
     function resetView() {
+      clearMovementState();
       camera.position.set(0, 1.7, 6.5);
       controls.target.set(0, 1.45, 0);
       controls.update();
@@ -532,6 +695,8 @@
 
     function animate() {
       requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.05);
+      updateMovement(delta);
       controls.update();
       renderer.render(scene, camera);
     }
