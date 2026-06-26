@@ -1,0 +1,60 @@
+{
+  "title": "Phòng truyền thống 3D",
+  "description": "Phòng trưng bày 3D dạng gallery có 5 ngách, mỗi ngách 6 ảnh, dùng dữ liệu từ resources/exhibit/exhibit.json.",
+  "camera": {
+    "position": [0, 1.7, 6.5],
+    "target": [0, 1.45, 0]
+  },
+  "room": {
+    "width": 12,
+    "depth": 10,
+    "height": 3.4
+  },
+  "niches": [
+    {
+      "id": "niche-1",
+      "title": "Góc kỷ niệm 1",
+      "items": ["1", "2", "3", "4", "5", "6"],
+      "position": [-3.65, 1.72, -4.92],
+      "rotation": [0, 0, 0],
+      "size": [2.8, 2.25],
+      "photoSize": [0.74, 0.50]
+    },
+    {
+      "id": "niche-2",
+      "title": "Góc kỷ niệm 2",
+      "items": ["7", "8", "9", "10", "11", "12"],
+      "position": [0, 1.72, -4.92],
+      "rotation": [0, 0, 0],
+      "size": [2.8, 2.25],
+      "photoSize": [0.74, 0.50]
+    },
+    {
+      "id": "niche-3",
+      "title": "Góc kỷ niệm 3",
+      "items": ["13", "14", "15", "16", "17", "18"],
+      "position": [3.65, 1.72, -4.92],
+      "rotation": [0, 0, 0],
+      "size": [2.8, 2.25],
+      "photoSize": [0.74, 0.50]
+    },
+    {
+      "id": "niche-4",
+      "title": "Góc kỷ niệm 4",
+      "items": ["19", "20", "21", "22", "23", "24"],
+      "position": [-5.92, 1.72, 0.6],
+      "rotation": [0, 1.5707963268, 0],
+      "size": [2.8, 2.25],
+      "photoSize": [0.74, 0.50]
+    },
+    {
+      "id": "niche-5",
+      "title": "Góc kỷ niệm 5",
+      "items": ["25", "26", "27", "28", "29", "30"],
+      "position": [5.92, 1.72, 0.6],
+      "rotation": [0, -1.5707963268, 0],
+      "size": [2.8, 2.25],
+      "photoSize": [0.74, 0.50]
+    }
+  ]
+}
