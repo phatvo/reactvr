@@ -191,6 +191,9 @@
     let canvasPointerDown = null;
     const lookDirection = new THREE.Vector3();
     const lookTarget = new THREE.Vector3();
+    // Khi drag bằng ngón tay trên điện thoại, chỉ xoay góc nhìn tại chỗ.
+    // Biến này khóa vị trí camera để tránh bị orbit/pan/teleport ngoài ý muốn trong lúc drag.
+    const touchLookLockedPosition = new THREE.Vector3();
 
     const clock = new THREE.Clock();
     const movementState = {
@@ -805,6 +808,7 @@
     }
 
     function applyTouchLook(yaw, pitch) {
+      // Hàm này chỉ thay đổi hướng nhìn, không thay đổi camera.position.
       touchLook.yaw = yaw;
       touchLook.pitch = THREE.MathUtils.clamp(pitch, lookConfig.minPitch, lookConfig.maxPitch);
       lookDirection.set(
@@ -834,6 +838,7 @@
         touchLook.pointerId = event.pointerId;
         touchLook.startX = event.clientX;
         touchLook.startY = event.clientY;
+        touchLookLockedPosition.copy(camera.position);
         syncTouchLookFromCamera();
         touchLook.startYaw = touchLook.yaw;
         touchLook.startPitch = touchLook.pitch;
@@ -864,6 +869,8 @@
       // yaw không bị giới hạn để có thể xoay ngang đủ 360 độ tại mọi vị trí.
       const yaw = touchLook.startYaw + dx * lookConfig.sensitivity * lookConfig.dragXSign;
       const pitch = touchLook.startPitch + dy * lookConfig.sensitivity * lookConfig.dragYSign;
+      // Giữ nguyên vị trí camera khi drag: chỉ đổi hướng nhìn 360, không dịch chuyển trong phòng.
+      camera.position.copy(touchLookLockedPosition);
       applyTouchLook(yaw, pitch);
     }
 
