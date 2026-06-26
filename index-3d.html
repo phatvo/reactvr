@@ -206,11 +206,19 @@
     const movementConfig = {
       speed: 2.1,
       sprintMultiplier: 2.1,
-      // Giới hạn vùng camera an toàn, không cho người xem xoay/đi quá sát tường.
-      minX: -4.35,
-      maxX: 4.35,
-      minZ: -3.75,
-      maxZ: 3.65
+      // Phòng thực tế 20m x 20m, giữ camera cách tường khoảng 1.4m.
+      minX: -8.6,
+      maxX: 8.6,
+      minZ: -8.6,
+      maxZ: 8.6
+    };
+
+    const roomConfig = {
+      width: 20,
+      depth: 20,
+      height: 6,
+      doorWidth: 3.0,
+      doorHeight: 2.7
     };
 
     setTimeout(() => {
@@ -228,10 +236,10 @@
     async function init() {
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x16120e);
-      scene.fog = new THREE.Fog(0x16120e, 12, 22);
+      scene.fog = new THREE.Fog(0x16120e, 18, 40);
 
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-      camera.position.set(0, 1.7, 6.5);
+      camera.position.set(0, 1.7, 7.4);
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -246,7 +254,7 @@
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
       controls.minDistance = 2.5;
-      controls.maxDistance = 12;
+      controls.maxDistance = 24;
       controls.minAzimuthAngle = -Infinity;
       controls.maxAzimuthAngle = Infinity;
       controls.maxPolarAngle = Math.PI * 0.72;
@@ -319,25 +327,25 @@
 
     function createFallbackGallery3D() {
       return {
-        title: 'Phòng truyền thống 3D',
-        camera: { position: [0, 1.7, 6.5], target: [0, 1.45, 0] },
+        title: 'Phòng truyền thống 3D - 20m x 20m x 6m',
+        camera: { position: [0, 1.7, 7.4], target: [0, 1.55, 0] },
         niches: [
-          { id: 'niche-1', title: 'Góc kỷ niệm 1', items: ['1','2','3','4','5','6'], position: [-3.65, 1.72, -4.92], rotation: [0,0,0], size: [2.8, 2.25], photoSize: [0.74, 0.50] },
-          { id: 'niche-2', title: 'Góc kỷ niệm 2', items: ['7','8','9','10','11','12'], position: [0, 1.72, -4.92], rotation: [0,0,0], size: [2.8, 2.25], photoSize: [0.74, 0.50] },
-          { id: 'niche-3', title: 'Góc kỷ niệm 3', items: ['13','14','15','16','17','18'], position: [3.65, 1.72, -4.92], rotation: [0,0,0], size: [2.8, 2.25], photoSize: [0.74, 0.50] },
-          { id: 'niche-4', title: 'Góc kỷ niệm 4', items: ['19','20','21','22','23','24'], position: [-5.92, 1.72, 0.6], rotation: [0, Math.PI / 2, 0], size: [2.8, 2.25], photoSize: [0.74, 0.50] },
-          { id: 'niche-5', title: 'Góc kỷ niệm 5', items: ['25','26','27','28','29','30'], position: [5.92, 1.72, 0.6], rotation: [0, -Math.PI / 2, 0], size: [2.8, 2.25], photoSize: [0.74, 0.50] }
+          { id: 'niche-1', title: 'Góc kỷ niệm 1', items: ['1','2','3','4','5','6'], position: [-6.0, 2.35, -9.92], rotation: [0,0,0], size: [3.9, 2.8], photoSize: [1.05, 0.70] },
+          { id: 'niche-2', title: 'Góc kỷ niệm 2', items: ['7','8','9','10','11','12'], position: [0, 2.35, -9.92], rotation: [0,0,0], size: [3.9, 2.8], photoSize: [1.05, 0.70] },
+          { id: 'niche-3', title: 'Góc kỷ niệm 3', items: ['13','14','15','16','17','18'], position: [6.0, 2.35, -9.92], rotation: [0,0,0], size: [3.9, 2.8], photoSize: [1.05, 0.70] },
+          { id: 'niche-4', title: 'Góc kỷ niệm 4', items: ['19','20','21','22','23','24'], position: [-9.92, 2.35, 0], rotation: [0, Math.PI / 2, 0], size: [3.9, 2.8], photoSize: [1.05, 0.70] },
+          { id: 'niche-5', title: 'Góc kỷ niệm 5', items: ['25','26','27','28','29','30'], position: [9.92, 2.35, 0], rotation: [0, -Math.PI / 2, 0], size: [3.9, 2.8], photoSize: [1.05, 0.70] }
         ]
       };
     }
 
     function createFallbackNavigationPoints() {
       return [
-        { id: 'move-center', title: 'Giữa phòng', position: [0, 0.045, 1.2], cameraPosition: [0, 1.7, 1.2], target: [0, 1.45, -1.4] },
-        { id: 'move-front', title: 'Xem tường trung tâm', position: [0, 0.045, -1.65], cameraPosition: [0, 1.7, -1.65], target: [0, 1.55, -3.05] },
-        { id: 'move-left', title: 'Xem ngách trái', position: [-2.45, 0.045, -0.25], cameraPosition: [-2.45, 1.7, -0.25], target: [-3.55, 1.55, 0.18] },
-        { id: 'move-right', title: 'Xem ngách phải', position: [2.45, 0.045, -0.25], cameraPosition: [2.45, 1.7, -0.25], target: [3.55, 1.55, 0.18] },
-        { id: 'move-door', title: 'Khu vực cửa', position: [0, 0.045, 2.85], cameraPosition: [0, 1.7, 2.85], target: [0, 1.45, 0.65] }
+        { id: 'move-center', title: 'Giữa phòng', position: [0, 0.045, 2.5], cameraPosition: [0, 1.7, 2.5], target: [0, 1.55, -2.0] },
+        { id: 'move-front', title: 'Xem tường trung tâm', position: [0, 0.045, -5.6], cameraPosition: [0, 1.7, -5.6], target: [0, 1.9, -9.5] },
+        { id: 'move-left', title: 'Xem ngách trái', position: [-5.8, 0.045, 0], cameraPosition: [-5.8, 1.7, 0], target: [-9.5, 1.85, 0] },
+        { id: 'move-right', title: 'Xem ngách phải', position: [5.8, 0.045, 0], cameraPosition: [5.8, 1.7, 0], target: [9.5, 1.85, 0] },
+        { id: 'move-door', title: 'Khu vực cửa', position: [0, 0.045, 6.4], cameraPosition: [0, 1.7, 6.4], target: [0, 1.55, 1.0] }
       ];
     }
 
@@ -352,71 +360,80 @@
       const hemi = new THREE.HemisphereLight(0xfff2dd, 0x2c2018, 1.1);
       scene.add(hemi);
 
-      const ambient = new THREE.AmbientLight(0xffe3bd, 0.55);
+      const ambient = new THREE.AmbientLight(0xffe3bd, 0.62);
       scene.add(ambient);
 
-      const main = new THREE.DirectionalLight(0xfff4df, 1.6);
-      main.position.set(0, 6, 4);
+      const main = new THREE.DirectionalLight(0xfff4df, 1.75);
+      main.position.set(0, 8, 5);
       main.castShadow = true;
       main.shadow.mapSize.set(2048, 2048);
       main.shadow.camera.near = 0.1;
-      main.shadow.camera.far = 20;
-      main.shadow.camera.left = -8;
-      main.shadow.camera.right = 8;
-      main.shadow.camera.top = 8;
-      main.shadow.camera.bottom = -8;
+      main.shadow.camera.far = 35;
+      main.shadow.camera.left = -14;
+      main.shadow.camera.right = 14;
+      main.shadow.camera.top = 14;
+      main.shadow.camera.bottom = -14;
       scene.add(main);
 
       const warmPositions = [
-        [-4, 3.0, -3.5], [0, 3.0, -3.5], [4, 3.0, -3.5],
-        [-4.8, 2.8, 0.5], [4.8, 2.8, 0.5]
+        [-6.5, 4.2, -7.0], [0, 4.2, -7.0], [6.5, 4.2, -7.0],
+        [-8.0, 4.0, 0.0], [8.0, 4.0, 0.0], [0, 4.1, 6.5]
       ];
       warmPositions.forEach(pos => {
-        const light = new THREE.PointLight(0xffc57a, 1.1, 6, 1.8);
+        const light = new THREE.PointLight(0xffc57a, 1.05, 11, 1.8);
         light.position.set(...pos);
         scene.add(light);
       });
     }
 
     function createRoomShell() {
-      const roomHeight = 5.2;
+      const roomWidth = roomConfig.width;
+      const roomDepth = roomConfig.depth;
+      const roomHeight = roomConfig.height;
+      const halfW = roomWidth / 2;
+      const halfD = roomDepth / 2;
       const wallCenterY = roomHeight / 2;
       const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xd9c5a9, roughness: 0.72, metalness: 0.02, side: THREE.DoubleSide });
       const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x5a2f18, roughness: 0.55, metalness: 0.03 });
       const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xb88b5d, roughness: 0.58, metalness: 0.08, side: THREE.DoubleSide });
       const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0x3f2112, roughness: 0.62, metalness: 0.01, side: THREE.DoubleSide });
 
-      const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 10), floorMaterial);
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), floorMaterial);
       floor.rotation.x = -Math.PI / 2;
       floor.receiveShadow = true;
       scene.add(floor);
 
-      const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(12, 10), ceilingMaterial);
+      const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), ceilingMaterial);
       ceiling.position.y = roomHeight;
       ceiling.rotation.x = Math.PI / 2;
       scene.add(ceiling);
 
-      addWall(0, wallCenterY, -5, 12, roomHeight, 0, wallMaterial);
-      addWall(-6, wallCenterY, 0, 10, roomHeight, Math.PI / 2, wallMaterial);
-      addWall(6, wallCenterY, 0, 10, roomHeight, -Math.PI / 2, wallMaterial);
+      // Tường sau, trái, phải.
+      addWall(0, wallCenterY, -halfD, roomWidth, roomHeight, 0, wallMaterial);
+      addWall(-halfW, wallCenterY, 0, roomDepth, roomHeight, Math.PI / 2, wallMaterial);
+      addWall(halfW, wallCenterY, 0, roomDepth, roomHeight, -Math.PI / 2, wallMaterial);
 
-      // Tường trước có cửa đi ở giữa để tránh đặt ảnh tại khu vực cửa.
-      addWall(-4.25, wallCenterY, 5, 3.5, roomHeight, Math.PI, wallMaterial);
-      addWall(4.25, wallCenterY, 5, 3.5, roomHeight, Math.PI, wallMaterial);
-      addWall(0, 3.85, 5, 5, 2.7, Math.PI, wallMaterial);
+      // Tường trước có cửa đi ở giữa; kích thước cửa được khai báo theo mét thực tế.
+      const doorWidth = roomConfig.doorWidth;
+      const doorHeight = roomConfig.doorHeight;
+      const sideWallWidth = (roomWidth - doorWidth) / 2;
+      const sideCenterX = doorWidth / 2 + sideWallWidth / 2;
+      addWall(-sideCenterX, wallCenterY, halfD, sideWallWidth, roomHeight, Math.PI, wallMaterial);
+      addWall(sideCenterX, wallCenterY, halfD, sideWallWidth, roomHeight, Math.PI, wallMaterial);
+      addWall(0, (roomHeight + doorHeight) / 2, halfD, doorWidth + 1.2, roomHeight - doorHeight, Math.PI, wallMaterial);
 
-      const door = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.45, 0.10), woodMaterial);
-      door.position.set(0, 1.22, 5.03);
+      const door = new THREE.Mesh(new THREE.BoxGeometry(doorWidth, doorHeight, 0.10), woodMaterial);
+      door.position.set(0, doorHeight / 2, halfD + 0.03);
       door.castShadow = true;
       scene.add(door);
 
-      // Len chân tường và dầm trần bằng gỗ.
-      addTrim(0, 0.18, -4.96, 12, 0.18, 0.12, woodMaterial);
-      addTrim(-5.96, 0.18, 0, 0.12, 0.18, 10, woodMaterial);
-      addTrim(5.96, 0.18, 0, 0.12, 0.18, 10, woodMaterial);
-      addTrim(0, roomHeight - 0.18, -4.96, 12, 0.18, 0.12, woodMaterial);
-      addTrim(-5.96, roomHeight - 0.18, 0, 0.12, 0.18, 10, woodMaterial);
-      addTrim(5.96, roomHeight - 0.18, 0, 0.12, 0.18, 10, woodMaterial);
+      // Len chân tường và dầm trần bằng gỗ theo kích thước phòng 20m x 20m.
+      addTrim(0, 0.18, -halfD + 0.04, roomWidth, 0.18, 0.12, woodMaterial);
+      addTrim(-halfW + 0.04, 0.18, 0, 0.12, 0.18, roomDepth, woodMaterial);
+      addTrim(halfW - 0.04, 0.18, 0, 0.12, 0.18, roomDepth, woodMaterial);
+      addTrim(0, roomHeight - 0.18, -halfD + 0.04, roomWidth, 0.18, 0.12, woodMaterial);
+      addTrim(-halfW + 0.04, roomHeight - 0.18, 0, 0.12, 0.18, roomDepth, woodMaterial);
+      addTrim(halfW - 0.04, roomHeight - 0.18, 0, 0.12, 0.18, roomDepth, woodMaterial);
     }
 
     function addWall(x, y, z, width, height, rotY, material) {
@@ -442,26 +459,26 @@
       const lampMat = new THREE.MeshStandardMaterial({ color: 0xffc46a, roughness: 0.25, emissive: 0xff9b2c, emissiveIntensity: 0.45 });
 
       // Bàn trung tâm thấp.
-      const tableTop = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.18, 1.0), wood);
+      const tableTop = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.18, 1.15), wood);
       tableTop.position.set(0, 0.55, 1.3);
       tableTop.castShadow = true;
       scene.add(tableTop);
-      [[-.9,.35,.95],[.9,.35,.95],[-.9,.35,1.65],[.9,.35,1.65]].forEach(p => {
+      [[-1.05,.35,.85],[1.05,.35,.85],[-1.05,.35,1.75],[1.05,.35,1.75]].forEach(p => {
         const leg = new THREE.Mesh(new THREE.BoxGeometry(.12, .45, .12), wood);
         leg.position.set(...p);
         leg.castShadow = true;
         scene.add(leg);
       });
 
-      // Đèn treo đơn giản ở giữa phòng.
-      const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.26, 32), lampMat);
-      lamp.position.set(0, 2.85, 0.2);
+      // Đèn treo giữa phòng, đặt dưới trần 6m.
+      const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.30, 32), lampMat);
+      lamp.position.set(0, roomConfig.height - 1.25, 0.2);
       scene.add(lamp);
 
-      // Các dải gỗ trần.
-      for (let x = -5; x <= 5; x += 1.25) {
-        const beam = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.12, 9.8), wood);
-        beam.position.set(x, 3.32, 0);
+      // Các dải gỗ trần theo chiều sâu phòng 20m.
+      for (let x = -9; x <= 9; x += 1.5) {
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.14, roomConfig.depth - 0.25), wood);
+        beam.position.set(x, roomConfig.height - 0.12, 0);
         beam.castShadow = true;
         scene.add(beam);
       }
@@ -967,7 +984,7 @@
     function resetView() {
       clearMovementState();
       teleportTween = null;
-      camera.position.set(0, 1.7, 6.5);
+      camera.position.set(0, 1.7, 7.4);
       controls.target.set(0, 1.45, 0);
       camera.lookAt(controls.target);
       syncTouchLookFromCamera();
