@@ -1,14 +1,21 @@
 {
-  "title": "Phòng truyền thống 3D",
+  "title": "Phòng truyền thống 3D - 20m x 20m x 6m",
+  "room": {
+    "width": 20,
+    "depth": 20,
+    "height": 6,
+    "unit": "meter",
+    "note": "1 đơn vị Three.js = 1 mét thực tế"
+  },
   "camera": {
     "position": [
       0,
       1.7,
-      6.5
+      7.4
     ],
     "target": [
       0,
-      1.45,
+      1.55,
       0
     ]
   },
@@ -25,9 +32,9 @@
         "6"
       ],
       "position": [
-        -3.65,
-        1.72,
-        -4.92
+        -6.0,
+        2.35,
+        -9.92
       ],
       "rotation": [
         0,
@@ -35,12 +42,12 @@
         0
       ],
       "size": [
-        2.8,
-        2.25
+        3.9,
+        2.8
       ],
       "photoSize": [
-        0.74,
-        0.5
+        1.05,
+        0.7
       ]
     },
     {
@@ -56,8 +63,8 @@
       ],
       "position": [
         0,
-        1.72,
-        -4.92
+        2.35,
+        -9.92
       ],
       "rotation": [
         0,
@@ -65,12 +72,12 @@
         0
       ],
       "size": [
-        2.8,
-        2.25
+        3.9,
+        2.8
       ],
       "photoSize": [
-        0.74,
-        0.5
+        1.05,
+        0.7
       ]
     },
     {
@@ -85,9 +92,9 @@
         "18"
       ],
       "position": [
-        3.65,
-        1.72,
-        -4.92
+        6.0,
+        2.35,
+        -9.92
       ],
       "rotation": [
         0,
@@ -95,12 +102,12 @@
         0
       ],
       "size": [
-        2.8,
-        2.25
+        3.9,
+        2.8
       ],
       "photoSize": [
-        0.74,
-        0.5
+        1.05,
+        0.7
       ]
     },
     {
@@ -115,9 +122,9 @@
         "24"
       ],
       "position": [
-        -5.92,
-        1.72,
-        0.6
+        -9.92,
+        2.35,
+        0
       ],
       "rotation": [
         0,
@@ -125,12 +132,12 @@
         0
       ],
       "size": [
-        2.8,
-        2.25
+        3.9,
+        2.8
       ],
       "photoSize": [
-        0.74,
-        0.5
+        1.05,
+        0.7
       ]
     },
     {
@@ -145,9 +152,9 @@
         "30"
       ],
       "position": [
-        5.92,
-        1.72,
-        0.6
+        9.92,
+        2.35,
+        0
       ],
       "rotation": [
         0,
@@ -155,12 +162,12 @@
         0
       ],
       "size": [
-        2.8,
-        2.25
+        3.9,
+        2.8
       ],
       "photoSize": [
-        0.74,
-        0.5
+        1.05,
+        0.7
       ]
     }
   ],
@@ -171,19 +178,19 @@
       "position": [
         0,
         0.045,
-        1.2
+        2.5
       ],
       "cameraPosition": [
         0,
         1.7,
-        1.2
+        2.5
       ],
       "target": [
         0,
-        1.45,
-        -1.4
+        1.55,
+        -2.0
       ],
-      "note": "Điểm đứng trung tâm, giữ khoảng cách an toàn với tường."
+      "note": "Điểm đứng trung tâm cho phòng 20m x 20m."
     },
     {
       "id": "move-front",
@@ -191,59 +198,59 @@
       "position": [
         0,
         0.045,
-        -1.65
+        -5.6
       ],
       "cameraPosition": [
         0,
         1.7,
-        -1.65
+        -5.6
       ],
       "target": [
         0,
-        1.55,
-        -3.05
+        1.9,
+        -9.5
       ],
-      "note": "Đã kéo xa tường sau để khi xoay không bị lọt ra sau tường."
+      "note": "Cách tường sau khoảng 4.4m để xoay 360 không bị xuyên tường."
     },
     {
       "id": "move-left",
       "title": "Xem ngách trái",
       "position": [
-        -2.45,
+        -5.8,
         0.045,
-        -0.25
+        0
       ],
       "cameraPosition": [
-        -2.45,
+        -5.8,
         1.7,
-        -0.25
+        0
       ],
       "target": [
-        -3.55,
-        1.55,
-        0.18
+        -9.5,
+        1.85,
+        0
       ],
-      "note": "Đã kéo vào giữa phòng, không đặt sát tường trái."
+      "note": "Cách tường trái khoảng 4.2m."
     },
     {
       "id": "move-right",
       "title": "Xem ngách phải",
       "position": [
-        2.45,
+        5.8,
         0.045,
-        -0.25
+        0
       ],
       "cameraPosition": [
-        2.45,
+        5.8,
         1.7,
-        -0.25
+        0
       ],
       "target": [
-        3.55,
-        1.55,
-        0.18
+        9.5,
+        1.85,
+        0
       ],
-      "note": "Đã kéo vào giữa phòng, không đặt sát tường phải."
+      "note": "Cách tường phải khoảng 4.2m."
     },
     {
       "id": "move-door",
@@ -251,19 +258,19 @@
       "position": [
         0,
         0.045,
-        2.85
+        6.4
       ],
       "cameraPosition": [
         0,
         1.7,
-        2.85
+        6.4
       ],
       "target": [
         0,
-        1.45,
-        0.65
+        1.55,
+        1.0
       ],
-      "note": "Đặt xa cửa/tường trước để hạn chế xoay ra ngoài phòng."
+      "note": "Cách tường cửa khoảng 3.6m."
     }
   ]
 }
