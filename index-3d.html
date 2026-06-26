@@ -156,6 +156,26 @@
     const sensorZAxis = new THREE.Vector3(0, 0, 1);
     const sensorQ1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+    const lookConfig = {
+      sensitivity: 0.0048,
+      minPitch: -1.30,
+      maxPitch: 1.22,
+      clickThreshold: 9
+    };
+    const touchLook = {
+      active: false,
+      pointerId: null,
+      startX: 0,
+      startY: 0,
+      startYaw: 0,
+      startPitch: 0,
+      yaw: 0,
+      pitch: 0,
+      moved: false
+    };
+    let canvasPointerDown = null;
+    const lookDirection = new THREE.Vector3();
+    const lookTarget = new THREE.Vector3();
 
     const clock = new THREE.Clock();
     const movementState = {
@@ -214,10 +234,11 @@
       controls.maxPolarAngle = Math.PI * 0.72;
       controls.minPolarAngle = Math.PI * 0.06;
       controls.enablePan = false;
-      controls.rotateSpeed = isTouchDevice ? -0.65 : 0.65;
-      if (THREE.TOUCH) {
-        controls.touches.ONE = THREE.TOUCH.ROTATE;
-        controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+      controls.rotateSpeed = 0.65;
+      // Trên điện thoại dùng chế độ xoay nhìn tại chỗ bằng code riêng.
+      // Cách này cho phép xoay ngang đủ 360 độ và không bị OrbitControls kéo camera vòng quanh target.
+      if (isTouchDevice) {
+        controls.enabled = false;
       }
       renderer.domElement.style.touchAction = 'none';
       controls.update();
@@ -237,12 +258,17 @@
       exhibitById = new Map(exhibits.map(item => [String(item.id), item]));
       if (gallery3d.camera?.position) camera.position.fromArray(gallery3d.camera.position);
       if (gallery3d.camera?.target) controls.target.fromArray(gallery3d.camera.target);
+      camera.lookAt(controls.target);
+      syncTouchLookFromCamera();
 
       buildNiches(gallery3d.niches || []);
       buildNavigationPoints(gallery3d.navigationPoints || createFallbackNavigationPoints());
 
       window.addEventListener('resize', onWindowResize);
-      renderer.domElement.addEventListener('pointerdown', onPointerDown);
+      renderer.domElement.addEventListener('pointerdown', onCanvasPointerDown, { passive: false });
+      renderer.domElement.addEventListener('pointermove', onCanvasPointerMove, { passive: false });
+      renderer.domElement.addEventListener('pointerup', onCanvasPointerUp, { passive: false });
+      renderer.domElement.addEventListener('pointercancel', onCanvasPointerCancel, { passive: false });
       document.getElementById('btnReset').addEventListener('click', resetView);
       document.getElementById('btnAuto').addEventListener('click', toggleAutoRotate);
       document.getElementById('btnWalk').addEventListener('click', toggleMovement);
@@ -739,6 +765,7 @@
       camera.position.x = THREE.MathUtils.clamp(camera.position.x, movementConfig.minX, movementConfig.maxX);
       camera.position.z = THREE.MathUtils.clamp(camera.position.z, movementConfig.minZ, movementConfig.maxZ);
       controls.target.copy(camera.position).add(targetOffset);
+      if (isTouchDevice && !sensorEnabled) syncTouchLookFromCamera();
     }
 
     function clampCameraInsideSafeArea() {
@@ -747,7 +774,109 @@
       camera.position.z = THREE.MathUtils.clamp(camera.position.z, movementConfig.minZ, movementConfig.maxZ);
     }
 
-    function onPointerDown(event) {
+    function isTouchLookPointer(event) {
+      return isTouchDevice && event.pointerType !== 'mouse' && !sensorEnabled;
+    }
+
+    function syncControlsTargetFromCamera(distance = 4) {
+      camera.getWorldDirection(lookDirection);
+      controls.target.copy(camera.position).addScaledVector(lookDirection, distance);
+    }
+
+    function syncTouchLookFromCamera() {
+      camera.getWorldDirection(lookDirection);
+      touchLook.yaw = Math.atan2(lookDirection.x, -lookDirection.z);
+      touchLook.pitch = Math.asin(THREE.MathUtils.clamp(lookDirection.y, -1, 1));
+    }
+
+    function applyTouchLook(yaw, pitch) {
+      touchLook.yaw = yaw;
+      touchLook.pitch = THREE.MathUtils.clamp(pitch, lookConfig.minPitch, lookConfig.maxPitch);
+      lookDirection.set(
+        Math.sin(touchLook.yaw) * Math.cos(touchLook.pitch),
+        Math.sin(touchLook.pitch),
+        -Math.cos(touchLook.yaw) * Math.cos(touchLook.pitch)
+      );
+      lookTarget.copy(camera.position).add(lookDirection);
+      camera.lookAt(lookTarget);
+      syncControlsTargetFromCamera(4);
+    }
+
+    function onCanvasPointerDown(event) {
+      if (modalBackdrop.style.display === 'flex') return;
+
+      canvasPointerDown = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        pointerType: event.pointerType,
+        moved: false
+      };
+
+      if (isTouchLookPointer(event)) {
+        event.preventDefault();
+        touchLook.active = true;
+        touchLook.pointerId = event.pointerId;
+        touchLook.startX = event.clientX;
+        touchLook.startY = event.clientY;
+        syncTouchLookFromCamera();
+        touchLook.startYaw = touchLook.yaw;
+        touchLook.startPitch = touchLook.pitch;
+        touchLook.moved = false;
+        renderer.domElement.setPointerCapture?.(event.pointerId);
+      }
+    }
+
+    function onCanvasPointerMove(event) {
+      if (canvasPointerDown && canvasPointerDown.pointerId === event.pointerId) {
+        const dx = event.clientX - canvasPointerDown.x;
+        const dy = event.clientY - canvasPointerDown.y;
+        if ((dx * dx + dy * dy) > lookConfig.clickThreshold * lookConfig.clickThreshold) {
+          canvasPointerDown.moved = true;
+        }
+      }
+
+      if (!touchLook.active || touchLook.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      const dx = event.clientX - touchLook.startX;
+      const dy = event.clientY - touchLook.startY;
+      if ((dx * dx + dy * dy) > lookConfig.clickThreshold * lookConfig.clickThreshold) {
+        touchLook.moved = true;
+      }
+
+      // Kéo tay sang phải -> nhìn sang phải; kéo lên -> nhìn lên.
+      // yaw không bị giới hạn để có thể xoay ngang đủ 360 độ tại mọi vị trí.
+      const yaw = touchLook.startYaw + dx * lookConfig.sensitivity;
+      const pitch = touchLook.startPitch - dy * lookConfig.sensitivity;
+      applyTouchLook(yaw, pitch);
+    }
+
+    function onCanvasPointerUp(event) {
+      const wasTouchLook = touchLook.active && touchLook.pointerId === event.pointerId;
+      const wasMoved = Boolean(canvasPointerDown?.moved || touchLook.moved);
+
+      if (wasTouchLook) {
+        event.preventDefault();
+        touchLook.active = false;
+        touchLook.pointerId = null;
+        renderer.domElement.releasePointerCapture?.(event.pointerId);
+      }
+
+      if (!wasMoved) {
+        handleCanvasClick(event);
+      }
+      canvasPointerDown = null;
+    }
+
+    function onCanvasPointerCancel(event) {
+      if (touchLook.pointerId === event.pointerId) {
+        touchLook.active = false;
+        touchLook.pointerId = null;
+      }
+      canvasPointerDown = null;
+    }
+
+    function handleCanvasClick(event) {
       if (modalBackdrop.style.display === 'flex') return;
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -791,6 +920,10 @@
       const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       camera.position.lerpVectors(teleportTween.fromPosition, teleportTween.toPosition, eased);
       controls.target.lerpVectors(teleportTween.fromTarget, teleportTween.toTarget, eased);
+      if (isTouchDevice && !sensorEnabled) {
+        camera.lookAt(controls.target);
+        syncTouchLookFromCamera();
+      }
       if (t >= 1) teleportTween = null;
       return true;
     }
@@ -813,6 +946,8 @@
       teleportTween = null;
       camera.position.set(0, 1.7, 6.5);
       controls.target.set(0, 1.45, 0);
+      camera.lookAt(controls.target);
+      syncTouchLookFromCamera();
       if (sensorEnabled) {
         sensorBaseReady = false;
         calibrateSensor();
@@ -884,7 +1019,8 @@
       controls.enableRotate = true;
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
       controls.target.copy(camera.position).addScaledVector(forward, 4);
-      controls.update();
+      syncTouchLookFromCamera();
+      if (controls.enabled) controls.update();
       document.getElementById('btnSensor').textContent = 'Cảm biến: Tắt';
       document.getElementById('btnSensorCalib').style.display = 'none';
     }
@@ -958,6 +1094,10 @@
       updateMovement(delta);
       if (sensorEnabled) {
         updateSensorCamera();
+      } else if (isTouchDevice) {
+        if (autoRotate && !touchLook.active) {
+          applyTouchLook(touchLook.yaw + delta * 0.18, touchLook.pitch);
+        }
       } else {
         controls.update();
       }
