@@ -163,5 +163,102 @@
         0.5
       ]
     }
+  ],
+  "navigationPoints": [
+    {
+      "id": "move-center",
+      "title": "Giữa phòng",
+      "position": [
+        0,
+        0.045,
+        1.6
+      ],
+      "cameraPosition": [
+        0,
+        1.7,
+        1.6
+      ],
+      "target": [
+        0,
+        1.45,
+        -2.6
+      ]
+    },
+    {
+      "id": "move-front",
+      "title": "Tường trung tâm",
+      "position": [
+        0,
+        0.045,
+        -2.35
+      ],
+      "cameraPosition": [
+        0,
+        1.7,
+        -2.35
+      ],
+      "target": [
+        0,
+        1.55,
+        -5
+      ]
+    },
+    {
+      "id": "move-left",
+      "title": "Ngách trái",
+      "position": [
+        -3.9,
+        0.045,
+        -1.25
+      ],
+      "cameraPosition": [
+        -3.9,
+        1.7,
+        -1.25
+      ],
+      "target": [
+        -5.95,
+        1.55,
+        0.55
+      ]
+    },
+    {
+      "id": "move-right",
+      "title": "Ngách phải",
+      "position": [
+        3.9,
+        0.045,
+        -1.25
+      ],
+      "cameraPosition": [
+        3.9,
+        1.7,
+        -1.25
+      ],
+      "target": [
+        5.95,
+        1.55,
+        0.55
+      ]
+    },
+    {
+      "id": "move-door",
+      "title": "Gần cửa",
+      "position": [
+        0,
+        0.045,
+        3.85
+      ],
+      "cameraPosition": [
+        0,
+        1.7,
+        3.85
+      ],
+      "target": [
+        0,
+        1.45,
+        0
+      ]
+    }
   ]
 }
