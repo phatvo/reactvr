@@ -160,7 +160,13 @@
       sensitivity: 0.0048,
       minPitch: -1.30,
       maxPitch: 1.22,
-      clickThreshold: 9
+      clickThreshold: 9,
+      // Điều chỉnh chiều kéo trên điện thoại.
+      // dragXSign = -1: kéo tay sang phải -> view quay theo hướng phải trong bản phản hồi mới.
+      // dragYSign = 1 : kéo tay lên/xuống không bị ngược theo phản hồi thực tế.
+      // Nếu muốn đảo lại riêng từng trục, đổi dấu 1 <-> -1.
+      dragXSign: -1,
+      dragYSign: 1
     };
     const touchLook = {
       active: false,
@@ -844,10 +850,11 @@
         touchLook.moved = true;
       }
 
-      // Kéo tay sang phải -> nhìn sang phải; kéo lên -> nhìn lên.
+      // Điều khiển xoay nhìn bằng ngón tay trên điện thoại.
+      // Bản này đảo chiều kéo theo phản hồi: drag ngón tay và view không còn bị ngược.
       // yaw không bị giới hạn để có thể xoay ngang đủ 360 độ tại mọi vị trí.
-      const yaw = touchLook.startYaw + dx * lookConfig.sensitivity;
-      const pitch = touchLook.startPitch - dy * lookConfig.sensitivity;
+      const yaw = touchLook.startYaw + dx * lookConfig.sensitivity * lookConfig.dragXSign;
+      const pitch = touchLook.startPitch + dy * lookConfig.sensitivity * lookConfig.dragYSign;
       applyTouchLook(yaw, pitch);
     }
 
