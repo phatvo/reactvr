@@ -157,7 +157,8 @@
     const sensorQ1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
     const lookConfig = {
-      sensitivity: 0.0048,
+      // Tốc độ xoay bằng ngón tay trên điện thoại. Giảm số này nếu còn nhanh, tăng nếu quá chậm.
+      sensitivity: 0.0026,
       minPitch: -1.30,
       maxPitch: 1.22,
       clickThreshold: 9,
