@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phòng truyền thống 3D</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; font-family: Arial, Helvetica, sans-serif; background: #111; }
+    #app { width: 100%; height: 100%; position: relative; }
+    canvas { display: block; }
+    .topbar {
+      position: absolute; left: 16px; top: 16px; z-index: 50;
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      background: rgba(15, 18, 22, .72); color: white; padding: 10px 12px; border-radius: 14px;
+      backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .topbar strong { font-size: 14px; margin-right: 8px; }
+    .topbar button {
+      border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.12); color: #fff;
+      border-radius: 999px; padding: 8px 12px; cursor: pointer; font-weight: 600;
+    }
+    .topbar button:hover { background: rgba(255,255,255,.22); }
+    .help {
+      position: absolute; right: 16px; top: 16px; z-index: 50; max-width: 320px;
+      background: rgba(255, 255, 255, .92); color: #202124; padding: 12px 14px; border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2); font-size: 13px; line-height: 1.45;
+    }
+    .help b { display: block; margin-bottom: 4px; }
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 999999; display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.72); padding: 24px;
+    }
+    .modal {
+      width: min(1100px, 96vw); max-height: 92vh; overflow: auto;
+      background: #fff; color: #111; border-radius: 18px; box-shadow: 0 24px 80px rgba(0,0,0,.45);
+    }
+    .modal-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px 18px; border-bottom: 1px solid #e5e7eb; }
+    .modal-header h2 { margin: 0; font-size: 18px; }
+    .modal-header button { border: none; background: #111827; color: white; padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+    .modal-body { padding: 16px 18px 18px; }
+    .modal-body img { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto 12px; border-radius: 12px; object-fit: contain; background: #f3f4f6; }
+    .modal-body p { margin: 0; color: #4b5563; }
+    .loading {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 40;
+      background: rgba(255,255,255,.92); color: #111827; padding: 14px 18px; border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25); font-weight: 600;
+    }
+    @media (max-width: 768px) {
+      .topbar { left: 10px; right: 10px; top: 10px; padding: 8px; }
+      .help { display: none; }
+      .topbar strong { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="topbar">
+      <strong>Phòng truyền thống 3D</strong>
+      <button id="btnReset">Reset góc nhìn</button>
+      <button id="btnAuto">Tự xoay: Tắt</button>
+      <button id="btnFullscreen">Toàn màn hình</button>
+    </div>
+    <div class="help">
+      <b>Hướng dẫn</b>
+      Kéo chuột để xoay, lăn chuột để zoom. Click vào ảnh trưng bày để xem ảnh lớn. Trên điện thoại: vuốt để xoay, chạm ảnh để mở.
+    </div>
+    <div id="loading" class="loading">Đang tải phòng 3D...</div>
+  </div>
+
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Ảnh trưng bày</h2>
+        <button id="modalClose">Đóng</button>
+      </div>
+      <div class="modal-body">
+        <img id="modalImage" alt="Ảnh trưng bày" />
+        <p id="modalDescription"></p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+    const EXHIBIT_BASE_URL = './resources/exhibit/';
+    const DEFAULT_GALLERY3D_URL = './resources/data/gallery3d.json';
+
+    const app = document.getElementById('app');
+    const loading = document.getElementById('loading');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalImage = document.getElementById('modalImage');
+    const modalDescription = document.getElementById('modalDescription');
+    const modalClose = document.getElementById('modalClose');
+
+    let camera, scene, renderer, controls;
+    let raycaster, pointer;
+    let clickable = [];
+    let autoRotate = false;
+    let exhibitById = new Map();
+
+    init();
+
+    async function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x16120e);
+      scene.fog = new THREE.Fog(0x16120e, 12, 22);
+
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 1.7, 6.5);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      app.appendChild(renderer.domElement);
+
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 1.45, 0);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.minDistance = 2.5;
+      controls.maxDistance = 12;
+      controls.maxPolarAngle = Math.PI * 0.56;
+      controls.minPolarAngle = Math.PI * 0.18;
+      controls.update();
+
+      raycaster = new THREE.Raycaster();
+      pointer = new THREE.Vector2();
+
+      setupLights();
+      createRoomShell();
+      createDecorations();
+
+      const [gallery3d, exhibits] = await Promise.all([
+        loadJson(DEFAULT_GALLERY3D_URL, createFallbackGallery3D()),
+        loadJson(EXHIBIT_BASE_URL + 'exhibit.json', createFallbackExhibits())
+      ]);
+
+      exhibitById = new Map(exhibits.map(item => [String(item.id), item]));
+      if (gallery3d.camera?.position) camera.position.fromArray(gallery3d.camera.position);
+      if (gallery3d.camera?.target) controls.target.fromArray(gallery3d.camera.target);
+
+      buildNiches(gallery3d.niches || []);
+
+      window.addEventListener('resize', onWindowResize);
+      renderer.domElement.addEventListener('pointerdown', onPointerDown);
+      document.getElementById('btnReset').addEventListener('click', resetView);
+      document.getElementById('btnAuto').addEventListener('click', toggleAutoRotate);
+      document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+      modalClose.addEventListener('click', closeModal);
+      modalBackdrop.addEventListener('click', event => {
+        if (event.target === modalBackdrop) closeModal();
+      });
+      window.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeModal();
+      });
+
+      loading.style.display = 'none';
+      animate();
+    }
+
+    async function loadJson(url, fallback) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+      } catch (error) {
+        console.warn('Không đọc được JSON, dùng dữ liệu fallback:', url, error);
+        return fallback;
+      }
+    }
+
+    function createFallbackGallery3D() {
+      return {
+        title: 'Phòng truyền thống 3D',
+        camera: { position: [0, 1.7, 6.5], target: [0, 1.45, 0] },
+        niches: [
+          { id: 'niche-1', title: 'Góc kỷ niệm 1', items: ['1','2','3','4','5','6'], position: [-3.65, 1.72, -4.92], rotation: [0,0,0], size: [2.8, 2.25], photoSize: [0.74, 0.50] },
+          { id: 'niche-2', title: 'Góc kỷ niệm 2', items: ['7','8','9','10','11','12'], position: [0, 1.72, -4.92], rotation: [0,0,0], size: [2.8, 2.25], photoSize: [0.74, 0.50] },
+          { id: 'niche-3', title: 'Góc kỷ niệm 3', items: ['13','14','15','16','17','18'], position: [3.65, 1.72, -4.92], rotation: [0,0,0], size: [2.8, 2.25], photoSize: [0.74, 0.50] },
+          { id: 'niche-4', title: 'Góc kỷ niệm 4', items: ['19','20','21','22','23','24'], position: [-5.92, 1.72, 0.6], rotation: [0, Math.PI / 2, 0], size: [2.8, 2.25], photoSize: [0.74, 0.50] },
+          { id: 'niche-5', title: 'Góc kỷ niệm 5', items: ['25','26','27','28','29','30'], position: [5.92, 1.72, 0.6], rotation: [0, -Math.PI / 2, 0], size: [2.8, 2.25], photoSize: [0.74, 0.50] }
+        ]
+      };
+    }
+
+    function createFallbackExhibits() {
+      return Array.from({ length: 30 }, (_, index) => {
+        const id = String(index + 1);
+        return { id, title: 'Ảnh kỷ niệm ' + id, description: 'Ảnh kỷ niệm số ' + id, file: id + '.jpg', category: 'Ảnh kỷ niệm' };
+      });
+    }
+
+    function setupLights() {
+      const hemi = new THREE.HemisphereLight(0xfff2dd, 0x2c2018, 1.1);
+      scene.add(hemi);
+
+      const ambient = new THREE.AmbientLight(0xffe3bd, 0.55);
+      scene.add(ambient);
+
+      const main = new THREE.DirectionalLight(0xfff4df, 1.6);
+      main.position.set(0, 6, 4);
+      main.castShadow = true;
+      main.shadow.mapSize.set(2048, 2048);
+      main.shadow.camera.near = 0.1;
+      main.shadow.camera.far = 20;
+      main.shadow.camera.left = -8;
+      main.shadow.camera.right = 8;
+      main.shadow.camera.top = 8;
+      main.shadow.camera.bottom = -8;
+      scene.add(main);
+
+      const warmPositions = [
+        [-4, 3.0, -3.5], [0, 3.0, -3.5], [4, 3.0, -3.5],
+        [-4.8, 2.8, 0.5], [4.8, 2.8, 0.5]
+      ];
+      warmPositions.forEach(pos => {
+        const light = new THREE.PointLight(0xffc57a, 1.1, 6, 1.8);
+        light.position.set(...pos);
+        scene.add(light);
+      });
+    }
+
+    function createRoomShell() {
+      const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xd9c5a9, roughness: 0.72, metalness: 0.02 });
+      const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x5a2f18, roughness: 0.55, metalness: 0.03 });
+      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xb88b5d, roughness: 0.58, metalness: 0.08 });
+      const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0x3f2112, roughness: 0.62, metalness: 0.01 });
+
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 10), floorMaterial);
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(12, 10), ceilingMaterial);
+      ceiling.position.y = 3.4;
+      ceiling.rotation.x = Math.PI / 2;
+      scene.add(ceiling);
+
+      addWall(0, 1.7, -5, 12, 3.4, 0, wallMaterial);
+      addWall(-6, 1.7, 0, 10, 3.4, Math.PI / 2, wallMaterial);
+      addWall(6, 1.7, 0, 10, 3.4, -Math.PI / 2, wallMaterial);
+
+      // Tường trước có cửa đi ở giữa để tránh đặt ảnh tại khu vực cửa.
+      addWall(-4.25, 1.7, 5, 3.5, 3.4, Math.PI, wallMaterial);
+      addWall(4.25, 1.7, 5, 3.5, 3.4, Math.PI, wallMaterial);
+      addWall(0, 3.0, 5, 5, 0.8, Math.PI, wallMaterial);
+
+      const door = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.45, 0.10), woodMaterial);
+      door.position.set(0, 1.22, 5.03);
+      door.castShadow = true;
+      scene.add(door);
+
+      // Len chân tường và dầm trần bằng gỗ.
+      addTrim(0, 0.18, -4.96, 12, 0.18, 0.12, woodMaterial);
+      addTrim(-5.96, 0.18, 0, 0.12, 0.18, 10, woodMaterial);
+      addTrim(5.96, 0.18, 0, 0.12, 0.18, 10, woodMaterial);
+      addTrim(0, 3.22, -4.96, 12, 0.18, 0.12, woodMaterial);
+      addTrim(-5.96, 3.22, 0, 0.12, 0.18, 10, woodMaterial);
+      addTrim(5.96, 3.22, 0, 0.12, 0.18, 10, woodMaterial);
+    }
+
+    function addWall(x, y, z, width, height, rotY, material) {
+      const wall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+      wall.position.set(x, y, z);
+      wall.rotation.y = rotY;
+      wall.receiveShadow = true;
+      scene.add(wall);
+      return wall;
+    }
+
+    function addTrim(x, y, z, sx, sy, sz, material) {
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+      trim.position.set(x, y, z);
+      trim.castShadow = true;
+      trim.receiveShadow = true;
+      scene.add(trim);
+      return trim;
+    }
+
+    function createDecorations() {
+      const wood = new THREE.MeshStandardMaterial({ color: 0x4b2413, roughness: 0.55 });
+      const lampMat = new THREE.MeshStandardMaterial({ color: 0xffc46a, roughness: 0.25, emissive: 0xff9b2c, emissiveIntensity: 0.45 });
+
+      // Bàn trung tâm thấp.
+      const tableTop = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.18, 1.0), wood);
+      tableTop.position.set(0, 0.55, 1.3);
+      tableTop.castShadow = true;
+      scene.add(tableTop);
+      [[-.9,.35,.95],[.9,.35,.95],[-.9,.35,1.65],[.9,.35,1.65]].forEach(p => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(.12, .45, .12), wood);
+        leg.position.set(...p);
+        leg.castShadow = true;
+        scene.add(leg);
+      });
+
+      // Đèn treo đơn giản ở giữa phòng.
+      const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.26, 32), lampMat);
+      lamp.position.set(0, 2.85, 0.2);
+      scene.add(lamp);
+
+      // Các dải gỗ trần.
+      for (let x = -5; x <= 5; x += 1.25) {
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.12, 9.8), wood);
+        beam.position.set(x, 3.32, 0);
+        beam.castShadow = true;
+        scene.add(beam);
+      }
+    }
+
+    function buildNiches(niches) {
+      niches.forEach(niche => {
+        const group = new THREE.Group();
+        group.name = niche.id;
+        group.position.fromArray(niche.position || [0, 1.7, -4.9]);
+        group.rotation.set(...(niche.rotation || [0,0,0]));
+        scene.add(group);
+
+        const [w, h] = niche.size || [2.8, 2.25];
+        const bgMat = new THREE.MeshStandardMaterial({ color: 0xeadcc8, roughness: 0.68, metalness: 0.02 });
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x6b351b, roughness: 0.5, metalness: 0.03 });
+        const titleMat = makeTextMaterial(niche.title || niche.id, 512, 96, '#fff5e6', '#5a2f18');
+
+        const panel = new THREE.Mesh(new THREE.PlaneGeometry(w, h), bgMat);
+        panel.position.set(0, 0, 0.005);
+        panel.receiveShadow = true;
+        group.add(panel);
+
+        const frameTop = new THREE.Mesh(new THREE.BoxGeometry(w + 0.16, 0.08, 0.08), woodMat);
+        frameTop.position.set(0, h / 2 + 0.04, 0.04);
+        const frameBottom = frameTop.clone();
+        frameBottom.position.set(0, -h / 2 - 0.04, 0.04);
+        const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, h + 0.16, 0.08), woodMat);
+        frameLeft.position.set(-w / 2 - 0.04, 0, 0.04);
+        const frameRight = frameLeft.clone();
+        frameRight.position.set(w / 2 + 0.04, 0, 0.04);
+        [frameTop, frameBottom, frameLeft, frameRight].forEach(m => { m.castShadow = true; group.add(m); });
+
+        const titlePlane = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.82, 0.28), titleMat);
+        titlePlane.position.set(0, h / 2 - 0.22, 0.055);
+        group.add(titlePlane);
+
+        // Đèn rọi trong từng ngách.
+        const spot = new THREE.SpotLight(0xffd39a, 1.0, 4.0, Math.PI / 5, 0.35, 1.2);
+        spot.position.set(0, h / 2 + 0.2, 0.45);
+        spot.target.position.set(0, 0, 0.02);
+        group.add(spot);
+        group.add(spot.target);
+
+        addPhotosToNiche(group, niche);
+      });
+    }
+
+    function addPhotosToNiche(group, niche) {
+      const [photoW, photoH] = niche.photoSize || [0.74, 0.5];
+      const xPositions = [-0.85, 0, 0.85];
+      const yPositions = [0.34, -0.42];
+      const ids = niche.items || [];
+
+      ids.slice(0, 6).forEach((id, idx) => {
+        const item = exhibitById.get(String(id)) || { id, title: 'Ảnh kỷ niệm ' + id, description: '', file: id + '.jpg' };
+        const row = Math.floor(idx / 3);
+        const col = idx % 3;
+        const x = xPositions[col];
+        const y = yPositions[row];
+
+        const frame = new THREE.Mesh(
+          new THREE.BoxGeometry(photoW + 0.10, photoH + 0.10, 0.055),
+          new THREE.MeshStandardMaterial({ color: 0x2b1a12, roughness: 0.45 })
+        );
+        frame.position.set(x, y, 0.08);
+        frame.castShadow = true;
+        group.add(frame);
+
+        const placeholder = makePlaceholderTexture(item.title || item.id);
+        const photoMat = new THREE.MeshBasicMaterial({ map: placeholder, toneMapped: false });
+        const photo = new THREE.Mesh(new THREE.PlaneGeometry(photoW, photoH), photoMat);
+        photo.position.set(x, y, 0.115);
+        photo.userData = { exhibit: item, url: EXHIBIT_BASE_URL + item.file };
+        group.add(photo);
+        clickable.push(photo);
+
+        loadTexture(EXHIBIT_BASE_URL + item.file, texture => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+          photo.material.map = texture;
+          photo.material.needsUpdate = true;
+        });
+      });
+    }
+
+    function loadTexture(url, onLoad) {
+      const loader = new THREE.TextureLoader();
+      loader.load(url, texture => onLoad(texture), undefined, error => {
+        console.warn('Không tải được ảnh:', url, error);
+      });
+    }
+
+    function makePlaceholderTexture(text) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 342;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#e8d7bd';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#70431f';
+      ctx.lineWidth = 18;
+      ctx.strokeRect(9, 9, canvas.width - 18, canvas.height - 18);
+      ctx.fillStyle = '#5a2f18';
+      ctx.font = 'bold 40px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      wrapText(ctx, text, canvas.width / 2, canvas.height / 2, canvas.width - 80, 46);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function makeTextMaterial(text, width, height, bgColor, textColor) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, width, height);
+      ctx.strokeStyle = textColor;
+      ctx.lineWidth = 6;
+      ctx.strokeRect(3, 3, width - 6, height - 6);
+      ctx.fillStyle = textColor;
+      ctx.font = 'bold 34px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, width / 2, height / 2);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return new THREE.MeshBasicMaterial({ map: texture, transparent: false, toneMapped: false });
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = String(text).split(' ');
+      const lines = [];
+      let line = '';
+      for (const word of words) {
+        const testLine = line ? line + ' ' + word : word;
+        if (ctx.measureText(testLine).width > maxWidth && line) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) lines.push(line);
+      const startY = y - ((lines.length - 1) * lineHeight) / 2;
+      lines.slice(0, 3).forEach((l, i) => ctx.fillText(l, x, startY + i * lineHeight));
+    }
+
+    function onPointerDown(event) {
+      if (modalBackdrop.style.display === 'flex') return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(clickable, false);
+      if (hits.length > 0) {
+        const object = hits[0].object;
+        openExhibit(object.userData.exhibit, object.userData.url);
+      }
+    }
+
+    function openExhibit(item, url) {
+      modalTitle.textContent = item.title || 'Ảnh trưng bày';
+      modalDescription.textContent = item.description || '';
+      modalImage.src = url;
+      modalBackdrop.style.display = 'flex';
+    }
+
+    function closeModal() {
+      modalBackdrop.style.display = 'none';
+      modalImage.src = '';
+    }
+
+    function resetView() {
+      camera.position.set(0, 1.7, 6.5);
+      controls.target.set(0, 1.45, 0);
+      controls.update();
+    }
+
+    function toggleAutoRotate() {
+      autoRotate = !autoRotate;
+      controls.autoRotate = autoRotate;
+      controls.autoRotateSpeed = 0.7;
+      document.getElementById('btnAuto').textContent = 'Tự xoay: ' + (autoRotate ? 'Bật' : 'Tắt');
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.();
+      } else {
+        document.exitFullscreen?.();
+      }
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
+</html>
