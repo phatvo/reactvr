@@ -171,94 +171,99 @@
       "position": [
         0,
         0.045,
-        1.6
+        1.2
       ],
       "cameraPosition": [
         0,
         1.7,
-        1.6
+        1.2
       ],
       "target": [
         0,
         1.45,
-        -2.6
-      ]
+        -1.4
+      ],
+      "note": "Điểm đứng trung tâm, giữ khoảng cách an toàn với tường."
     },
     {
       "id": "move-front",
-      "title": "Tường trung tâm",
+      "title": "Xem tường trung tâm",
       "position": [
         0,
         0.045,
-        -2.35
+        -1.65
       ],
       "cameraPosition": [
         0,
         1.7,
-        -2.35
+        -1.65
       ],
       "target": [
         0,
         1.55,
-        -5
-      ]
+        -3.05
+      ],
+      "note": "Đã kéo xa tường sau để khi xoay không bị lọt ra sau tường."
     },
     {
       "id": "move-left",
-      "title": "Ngách trái",
+      "title": "Xem ngách trái",
       "position": [
-        -3.9,
+        -2.45,
         0.045,
-        -1.25
+        -0.25
       ],
       "cameraPosition": [
-        -3.9,
+        -2.45,
         1.7,
-        -1.25
+        -0.25
       ],
       "target": [
-        -5.95,
+        -3.55,
         1.55,
-        0.55
-      ]
+        0.18
+      ],
+      "note": "Đã kéo vào giữa phòng, không đặt sát tường trái."
     },
     {
       "id": "move-right",
-      "title": "Ngách phải",
+      "title": "Xem ngách phải",
       "position": [
-        3.9,
+        2.45,
         0.045,
-        -1.25
+        -0.25
       ],
       "cameraPosition": [
-        3.9,
+        2.45,
         1.7,
-        -1.25
+        -0.25
       ],
       "target": [
-        5.95,
+        3.55,
         1.55,
-        0.55
-      ]
+        0.18
+      ],
+      "note": "Đã kéo vào giữa phòng, không đặt sát tường phải."
     },
     {
       "id": "move-door",
-      "title": "Gần cửa",
+      "title": "Khu vực cửa",
       "position": [
         0,
         0.045,
-        3.85
+        2.85
       ],
       "cameraPosition": [
         0,
         1.7,
-        3.85
+        2.85
       ],
       "target": [
         0,
         1.45,
-        0
-      ]
+        0.65
+      ],
+      "note": "Đặt xa cửa/tường trước để hạn chế xoay ra ngoài phòng."
     }
   ]
 }
